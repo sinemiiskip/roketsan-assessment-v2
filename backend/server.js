@@ -20,6 +20,7 @@ app.use('/api', require('./routes/session'));
 app.use('/api', require('./routes/content'));
 app.use('/api', require('./routes/audio'));
 app.use('/api', require('./routes/intray'));
+app.use('/api', require('./routes/candidates'));
 
 app.get('/health', function(req, res) {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
