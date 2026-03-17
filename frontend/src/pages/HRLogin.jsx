@@ -1,27 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import RoketsanLogo from '../components/RoketsanLogo'
 
-const HR_PASSWORD = 'roketsan2024'
+const API = 'https://roketsan-assessment.onrender.com'
 
 export default function HRLogin() {
   const navigate = useNavigate()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
-      if (password === HR_PASSWORD) {
-        localStorage.setItem('hr_auth', 'true')
-        navigate('/hr/dashboard')
-      } else {
-        setError('Hatalı şifre. Lütfen tekrar deneyiniz.')
-        setLoading(false)
-      }
-    }, 800)
+    setError('')
+    try {
+      const res = await axios.post(`${API}/api/auth/login`, { username, password })
+      localStorage.setItem('hr_token', res.data.token)
+      localStorage.setItem('hr_user', JSON.stringify(res.data.user))
+      navigate('/hr/dashboard')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Kullanıcı adı veya şifre hatalı.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -49,7 +53,13 @@ export default function HRLogin() {
           </div>
 
           <div>
-            <label className="label">Erişim Şifresi</label>
+            <label className="label">Kullanıcı Adı</label>
+            <input className="input-field" type="text" placeholder="kullanici_adi"
+              value={username} onChange={e => { setUsername(e.target.value); setError('') }} />
+          </div>
+
+          <div>
+            <label className="label">Şifre</label>
             <input className="input-field" type="password" placeholder="••••••••••••"
               value={password} onChange={e => { setPassword(e.target.value); setError('') }} />
           </div>
@@ -60,7 +70,7 @@ export default function HRLogin() {
             </div>
           )}
 
-          <button className="btn-primary" type="submit" disabled={loading || !password}>
+          <button className="btn-primary" type="submit" disabled={loading || !username || !password}>
             {loading ? 'Doğrulanıyor...' : 'Panele Giriş →'}
           </button>
 
