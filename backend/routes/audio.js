@@ -10,42 +10,116 @@ router.post('/submit-audio', async (req, res) => {
   const { session_id, transcript, duration } = req.body;
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
   if (!transcript) return res.status(400).json({ error: 'transcript gerekli' });
+
   const session = getSession(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
+  const rules = loadRules();
+
+  // 1. Kural tabanlı değerlendirme
+  const ruleBasedEval = evaluateTranscript(transcript);
+
+  // 2. AI destekli derin analiz
+  let aiAnalysis = null;
+  let consistencyScore = null;
+  let sentimentAnalysis = null;
+
   try {
-    const baseEvaluation = evaluateTranscript(transcript);
-    let aiAnalysis = null;
+    const competencyNames = rules.CompetencyMap.competencies
+      .map(c => `${c.id}: ${c.name}`).join('\n');
 
-    if (process.env.GEMINI_API_KEY) {
-      const rules = loadRules();
-      const competencyNames = rules.CompetencyMap.competencies.map(c => c.name).join(', ');
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const prompt = `Sen bir liderlik değerlendirme uzmanısın. Şu yetkinlikleri değerlendir: ${competencyNames}.
-Senaryo: ${JSON.stringify(session.scenario?.crisis || 'Genel liderlik senaryosu')}
-Katılımcı yanıtı: "${transcript}"
-Sadece JSON formatında yanıt ver:
+    const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+
+ADAY BİLGİLERİ:
+- Ad: ${session.name}
+- Departman: ${session.department}
+- Pozisyon: ${session.position}
+
+SENARYO:
+${JSON.stringify(session.scenario?.crisis || 'Genel liderlik senaryosu')}
+
+ADAY YANITI (Transkript):
+"${transcript}"
+
+DEĞERLENDİR:
+${competencyNames}
+
+Lütfen aşağıdaki JSON formatında detaylı analiz yap:
 {
-  "strengths": ["güçlü yön 1", "güçlü yön 2"],
+  "sentimentAnalysis": {
+    "overallTone": "pozitif/nötr/negatif",
+    "tones": {
+      "kararlılık": 0-100,
+      "empati": 0-100,
+      "özgüven": 0-100,
+      "stresAltiKontrol": 0-100,
+      "proaktiflik": 0-100
+    },
+    "dominantEmotion": "baskın duygu",
+    "communicationStyle": "iletişim tarzı açıklaması"
+  },
+  "competencyScores": {
+    "LDR_01": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_02": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_03": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_04": { "score": 0-100, "evidence": "yanıttan kanıt" }
+  },
+  "strengths": ["güçlü yön 1", "güçlü yön 2", "güçlü yön 3"],
   "improvements": ["gelişim alanı 1", "gelişim alanı 2"],
-  "overallScore": 75,
-  "summary": "kısa değerlendirme metni"
+  "overallScore": 0-100,
+  "summary": "3-4 cümle kapsamlı değerlendirme",
+  "leadershipProfile": "liderlik profili (örn: Analitik Lider, Empati Odaklı Lider vb.)"
 }`;
-      const result = await model.generateContent(prompt);
-      const text = result.response.text().replace(/```json|```/g, '').trim();
-      aiAnalysis = JSON.parse(text);
-    }
 
-    const finalEvaluation = { ...baseEvaluation, duration: duration || 0, aiAnalysis, timestamp: new Date().toISOString() };
-    updateSession(session_id, { audioResult: finalEvaluation });
-    res.json({ success: true, evaluation: finalEvaluation });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().replace(/```json|```/g, '').trim();
+    aiAnalysis = JSON.parse(text);
+
+    sentimentAnalysis = aiAnalysis.sentimentAnalysis;
+
+    // 3. Tutarlılık Skoru — AI skoru vs Kural tabanlı skor karşılaştırması
+    const aiOverall = aiAnalysis.overallScore || 0;
+    const ruleOverall = ruleBasedEval.overallScore || 0;
+    const diff = Math.abs(aiOverall - ruleOverall);
+    consistencyScore = {
+      aiScore: aiOverall,
+      ruleScore: ruleOverall,
+      difference: diff,
+      consistency: diff <= 15 ? 'Yüksek' : diff <= 30 ? 'Orta' : 'Düşük',
+      consistencyPercentage: Math.max(0, 100 - diff),
+      interpretation: diff <= 15
+        ? 'AI ve kural tabanlı sistem yüksek tutarlılıkta hemfikir'
+        : diff <= 30
+        ? 'Sistemler arasında orta düzeyde farklılık var, manuel inceleme önerilir'
+        : 'Sistemler arasında belirgin farklılık var, değerlendirmeci incelemesi gerekli'
+    };
 
   } catch (err) {
-    console.error('[submit-audio]', err.message);
-    const fallback = { ...evaluateTranscript(transcript), duration: duration || 0, aiAnalysis: null, timestamp: new Date().toISOString() };
-    updateSession(session_id, { audioResult: fallback });
-    res.json({ success: true, evaluation: fallback });
+    console.error('[submit-audio AI]', err.message);
+    // AI başarısız olsa bile kural tabanlı sonuçla devam et
+    consistencyScore = {
+      aiScore: null,
+      ruleScore: ruleBasedEval.overallScore,
+      difference: null,
+      consistency: 'Hesaplanamadı',
+      consistencyPercentage: null,
+      interpretation: 'AI analizi tamamlanamadı, yalnızca kural tabanlı değerlendirme kullanıldı'
+    };
   }
+
+  const finalEvaluation = {
+    ...ruleBasedEval,
+    duration: duration || 0,
+    transcript,
+    aiAnalysis,
+    sentimentAnalysis,
+    consistencyScore,
+    timestamp: new Date().toISOString()
+  };
+
+  updateSession(session_id, { audioResult: finalEvaluation });
+  res.json({ success: true, evaluation: finalEvaluation });
 });
 
 module.exports = router;

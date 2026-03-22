@@ -1,72 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import { useAssessment } from '../context/AssessmentContext'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
-const QUESTIONS = [
-  {
-    id: 1,
-    question: 'Ekibinizde kritik bir proje gecikmesi yaşandığında ilk tepkiniz ne olur?',
-    options: [
-      { id: 'a', text: 'Hemen tüm ekibi toplayıp durum değerlendirmesi yaparım.', competency: 'crisis_management', score: 3 },
-      { id: 'b', text: 'Sorumlu kişiyi belirleyip hesap sorarım.', competency: 'decision_making', score: 1 },
-      { id: 'c', text: 'Üst yönetime derhal bildiririm.', competency: 'communication', score: 2 },
-      { id: 'd', text: 'Kök nedeni analiz edip aksiyon planı oluştururum.', competency: 'strategic_thinking', score: 3 },
-    ]
-  },
-  {
-    id: 2,
-    question: 'İki önemli projeniz aynı anda kritik aşamaya geldiğinde ne yaparsınız?',
-    options: [
-      { id: 'a', text: 'Stratejik öneme göre önceliklendirip kaynakları yeniden dağıtırım.', competency: 'strategic_thinking', score: 3 },
-      { id: 'b', text: 'Her iki projeye de eşit kaynak ayırırım.', competency: 'decision_making', score: 1 },
-      { id: 'c', text: 'Ekibimle birlikte karar veririm.', competency: 'team_leadership', score: 2 },
-      { id: 'd', text: 'Müdürümden yönlendirme isterim.', competency: 'communication', score: 1 },
-    ]
-  },
-  {
-    id: 3,
-    question: 'Ekibinizden biri yüksek riskli ama yenilikçi bir fikir önerdiğinde tutumunuz nedir?',
-    options: [
-      { id: 'a', text: 'Fikri redderim, mevcut prosedürlere bağlı kalırım.', competency: 'strategic_thinking', score: 0 },
-      { id: 'b', text: 'Risk analizini yapar, uygulanabilir bulursam desteklerim.', competency: 'strategic_thinking', score: 3 },
-      { id: 'c', text: 'Fikri üst yönetime ileterim.', competency: 'communication', score: 2 },
-      { id: 'd', text: 'Küçük ölçekli pilot uygulama önerisi yaparım.', competency: 'decision_making', score: 3 },
-    ]
-  },
-  {
-    id: 4,
-    question: 'Bir müşteri toplantısında ekibiniz hata yaptığında nasıl davranırsınız?',
-    options: [
-      { id: 'a', text: 'Hatayı yapan kişiyi toplantıda uyarırım.', competency: 'team_leadership', score: 0 },
-      { id: 'b', text: 'Hatayı sahiplenirim, çözüm odaklı konuşurum.', competency: 'team_leadership', score: 3 },
-      { id: 'c', text: 'Toplantıyı kısa keser, daha sonra ele alırım.', competency: 'crisis_management', score: 1 },
-      { id: 'd', text: 'Müşteriye özür diler, telafi planı sunarım.', competency: 'communication', score: 2 },
-    ]
-  },
-]
+const API = 'https://roketsan-assessment.onrender.com'
 
 export default function IceBreaker() {
   const navigate = useNavigate()
-  const { setIceBreakerResult } = useAssessment()
+  const { session, setIceBreakerResult } = useAssessment()
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
   const [current, setCurrent] = useState(0)
   const [answers, setAnswers] = useState({})
   const [selected, setSelected] = useState(null)
   const [animating, setAnimating] = useState(false)
 
-  const q = QUESTIONS[current]
-  const progress = ((current) / QUESTIONS.length) * 100
+  useEffect(() => { generateQuestions() }, [])
 
-  function handleSelect(option) {
-    setSelected(option.id)
+  async function generateQuestions() {
+    setLoading(true)
+    try {
+      const res = await axios.post(`${API}/api/generate-icebreaker`, {
+        session_id: session?.session_id
+      })
+      setQuestions(res.data.questions || [])
+    } catch (err) {
+      console.error('IceBreaker generation failed:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  function handleNext() {
-    if (!selected) return
-    const newAnswers = { ...answers, [q.id]: QUESTIONS[current].options.find(o => o.id === selected) }
+  const q = questions[current]
+  const progress = questions.length > 0 ? (current / questions.length) * 100 : 0
 
-    if (current < QUESTIONS.length - 1) {
+  function handleSelect(option) { setSelected(option.id) }
+
+  function handleNext() {
+    if (!selected || !q) return
+    const selectedOption = q.options.find(o => o.id === selected)
+    const newAnswers = { ...answers, [q.id]: selectedOption }
+
+    if (current < questions.length - 1) {
       setAnimating(true)
       setTimeout(() => {
         setAnswers(newAnswers)
@@ -75,17 +52,42 @@ export default function IceBreaker() {
         setAnimating(false)
       }, 300)
     } else {
-      // Calculate scores
-      const allAnswers = { ...newAnswers }
       const scores = {}
-      Object.values(allAnswers).forEach(ans => {
+      Object.values(newAnswers).forEach(ans => {
         if (!scores[ans.competency]) scores[ans.competency] = 0
         scores[ans.competency] += ans.score
       })
-      setIceBreakerResult({ answers: allAnswers, scores })
+      setIceBreakerResult({ answers: newAnswers, scores, totalAnswers: Object.keys(newAnswers).length })
       navigate('/scenario')
     }
   }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24 }}>
+        <div className="grid-bg" />
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <RoketsanLogo size={32} />
+          <div style={{ marginTop: 32, fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--accent-green)', letterSpacing: 2 }}>
+            ▶ AI SORULARI HAZIRLANIYOR...
+          </div>
+          <div style={{ marginTop: 16, color: 'var(--text-muted)', fontSize: 14 }}>
+            Departmanınıza özel sorular üretiliyor
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 24 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-green)',
+                animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite`
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!q) return null
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative', overflow: 'hidden' }}>
@@ -98,7 +100,7 @@ export default function IceBreaker() {
           <RoketsanLogo size={28} />
           <StepIndicator current={2} />
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>
-            {current + 1} / {QUESTIONS.length}
+            {current + 1} / {questions.length}
           </div>
         </div>
 
@@ -111,13 +113,16 @@ export default function IceBreaker() {
         <div style={{ maxWidth: 760, margin: '0 auto', padding: '60px 24px' }}>
           <div style={{ marginBottom: 40, opacity: animating ? 0 : 1, transition: 'opacity 0.3s ease' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-              <span className="badge badge-medium">ISINMA SORUSU</span>
+              <span className="badge badge-medium">AI ISINMA SORUSU</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
-                Soru {current + 1} / {QUESTIONS.length}
+                Soru {current + 1} / {questions.length}
+              </span>
+              <span style={{ padding: '3px 10px', borderRadius: 20, background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: 'var(--accent-blue)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: 1 }}>
+                ✦ Gemini AI
               </span>
             </div>
 
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)', marginBottom: 40 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 600, lineHeight: 1.4, color: 'var(--text-primary)', marginBottom: 40 }}>
               {q.question}
             </h2>
 
@@ -153,7 +158,7 @@ export default function IceBreaker() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
             <button className="btn-primary" onClick={handleNext} disabled={!selected}>
-              {current < QUESTIONS.length - 1 ? 'Sonraki →' : 'Senaryoya Geç →'}
+              {current < questions.length - 1 ? 'Sonraki →' : 'Senaryoya Geç →'}
             </button>
           </div>
         </div>
