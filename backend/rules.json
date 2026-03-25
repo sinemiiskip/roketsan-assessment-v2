@@ -1,0 +1,221 @@
+{
+  "CompetencyMap": {
+    "description": "Roketsan Liderlik Yetkinlik Matrisi",
+    "competencies": [
+      {
+        "id": "LDR_01",
+        "name": "Stratejik Çeviklik ve Karar Verme",
+        "weight": 0.30,
+        "keywords": ["vizyon", "gelecek projeksiyonu", "risk analizi", "milli teknoloji", "stratejik öncelik", "çevik yaklaşım", "pazar analizi", "rekabet avantajı", "uzun vadeli planlama", "veri odaklı", "inovasyon", "teknolojik trend", "makro bakış", "sürdürülebilirlik", "portföy yönetimi", "senaryo planlama", "sistem düşüncesi", "fırsat odaklı", "katma değer", "yerlileştirme", "savunma stratejisi", "vizyoner bakış"],
+        "negativeKeywords": ["kararsızlık", "bekle-gör", "riskten kaçınma", "statüko", "dar görüşlü", "günü kurtarma", "plansızlık", "tepkisel", "vizyonsuzluk", "analiz felci", "strateji yoksunluğu"]
+      },
+      {
+        "id": "LDR_02",
+        "name": "İnisiyatif ve Sorumluluk Alma",
+        "weight": 0.25,
+        "keywords": ["sorumluluk bende", "inisiyatif alıyorum", "çözüm odaklıyım", "aksiyon planı", "milli görev", "proaktif", "kararlılık", "sonuç odaklı", "sahiplenme", "özgüven", "hızlı karar", "cesaret", "çözüm üretme", "bitiricilik", "aktif rol"],
+        "negativeKeywords": ["topu başkasına atma", "benim işim değil", "onay bekliyorum", "pasif", "erteleme", "kaçınma", "bahaneler", "hareketsiz", "çekingen", "sorumluluktan kaçma"]
+      },
+      {
+        "id": "LDR_03",
+        "name": "Ekip Geliştirme ve İş Birliği",
+        "weight": 0.25,
+        "keywords": ["ekip ruhu", "mentorluk", "yetkilendirme", "delegasyon", "bilgi paylaşımı", "sinerji", "koçluk", "iş birliği", "empati", "açık iletişim", "geri bildirim", "motivasyon", "çatışma yönetimi", "destekleyici", "kapsayıcı", "takdir"],
+        "negativeKeywords": ["mikro yönetim", "suçlayıcı", "iletişim kopukluğu", "ego", "dışlama", "güvensizlik", "otoriter", "bencil", "yıkıcı eleştiri", "baskıcı"]
+      },
+      {
+        "id": "LDR_04",
+        "name": "Etik Değerler ve Kurumsal Disiplin",
+        "weight": 0.20,
+        "keywords": ["etik ilkeler", "şeffaflık", "güvenlik protokolü", "dürüst raporlama", "kurumsal disiplin", "liyakat", "adalet", "tutarlılık", "dürüstlük", "hesap verebilirlik", "milli çıkar", "güvenilirlik", "uyumluluk"],
+        "negativeKeywords": ["hatayı gizleme", "prosedür ihlali", "bilgi sızdırma", "adaletsiz", "kayırmacılık", "sadakatsizlik", "tutarsız", "çıkar çatışması", "suistimal", "güvenlik zafiyeti"]
+      }
+    ]
+  },
+  "HierarchyMatrix": {
+    "description": "Roketsan Hiyerarşi ve Yetki Matrisi",
+    "levels": [
+      {
+        "id": "POZ_01",
+        "title": "Kıdemli Mühendis",
+        "difficulty": 1,
+        "scenarioComplexity": "Düşük-Orta",
+        "authorityScope": "Teknik süreçler ve teknik mentorluk",
+        "decisionAuthority": "Operasyonel iyileştirme, teknik yöntem seçimi",
+        "timeLimit": 300,
+        "aiScenarioFocus": "Teknik anlaşmazlıklar, iş yapış şekli farklılıkları ve bireysel inisiyatif gerektiren durumlar",
+        "matchKeywords": ["mühendis", "kıdemli mühendis", "uzman", "kıdemli uzman", "senior", "sr."]
+      },
+      {
+        "id": "POZ_02",
+        "title": "Şef / Takım Lideri",
+        "difficulty": 2,
+        "scenarioComplexity": "Orta-Yüksek",
+        "authorityScope": "Ekip içi uyum, kaynak dağılımı, birimler arası koordinasyon",
+        "decisionAuthority": "Ekip içi önceliklendirme, personel motivasyonu, günlük/haftalık kriz yönetimi",
+        "timeLimit": 240,
+        "aiScenarioFocus": "Alt çalışanlar arası çatışmalar, ani kaynak eksiklikleri ve operasyonel darboğaz senaryoları",
+        "matchKeywords": ["şef", "takım lideri", "team lead", "lider", "koordinatör", "proje yöneticisi"]
+      },
+      {
+        "id": "POZ_03",
+        "title": "Müdür / Direktör",
+        "difficulty": 3,
+        "scenarioComplexity": "Yüksek",
+        "authorityScope": "Stratejik bütçe yönetimi, üst yönetim raporlaması, departman vizyonu",
+        "decisionAuthority": "Departman bütçesi, stratejik ortaklıklar, kurumsal risk iştahı",
+        "timeLimit": 180,
+        "aiScenarioFocus": "Makro ekonomik krizler, kurumsal itibar riskleri, SSB ile stratejik hizalanma senaryoları",
+        "matchKeywords": ["müdür", "direktör", "başkan", "vp", "genel müdür", "director", "manager"]
+      }
+    ]
+  },
+  "AcousticRubric": {
+    "description": "Roketsan Ses Analiz Rubriği",
+    "parameters": [
+      {
+        "id": "SPEED",
+        "name": "Konuşma Hızı",
+        "idealMin": 120,
+        "idealMax": 150,
+        "unit": "kelime/dakika",
+        "scoring": {
+          "tooFast": { "threshold": 200, "score": -5, "note": "Anksiyete, panik veya aşırı heyecan belirtisi." },
+          "tooSlow": { "threshold": 80, "score": -5, "note": "Kararsızlık, özgüven eksikliği veya hazırlıksız olma." },
+          "balanced": { "score": 10, "note": "Kontrollü liderlik, ikna edici ve net anlatım." }
+        }
+      },
+      {
+        "id": "PAUSE",
+        "name": "Duraksamalar",
+        "scoring": {
+          "shortPause": { "note": "Düşünerek konuşma, vurgu yapma. Pozitif.", "score": 3 },
+          "longPause": { "threshold": 3, "unit": "saniye", "score": -5, "note": "Bloke olma, belirsizlik veya stres altında donma." }
+        }
+      },
+      {
+        "id": "SENTIMENT",
+        "name": "Duygu Tonu",
+        "tones": [
+          { "tone": "Empatik", "keywords": ["anlıyorum", "ekibim", "birlikte", "destek", "empati"], "score": 10, "context": "Ekip yönetimi ve çatışma çözme vakalarında." },
+          { "tone": "Kararlı", "keywords": ["kesinlikle", "derhal", "hemen", "kararlıyım", "aksiyon"], "score": 10, "context": "Kriz ve stratejik karar anlarında." },
+          { "tone": "Savunmacı", "keywords": ["benim hatam değil", "ben değildim", "bana sormadılar"], "score": -10, "context": "Hata kabulü ve geri bildirim anlarında." }
+        ]
+      }
+    ],
+    "fillerWords": ["yani", "şey", "eee", "mmm", "uh", "um", "hani", "işte", "falan"],
+    "scoringWeights": {
+      "content": 0.50,
+      "delivery": 0.30,
+      "structure": 0.20
+    }
+  },
+  "InTrayMatrix": {
+    "description": "Roketsan In-Tray / Eisenhower Matrisi",
+    "quadrantDefinitions": {
+      "Q1": "Hemen Yap — Krizler, son teslim tarihi gelen işler",
+      "Q2": "Planla / Zaman Ayır — Stratejik planlama, ekip gelişimi, ilişkiler",
+      "Q3": "Delege Et — Rutin toplantılar, bazı e-postalar",
+      "Q4": "Ele / İptal Et — Gereksiz detaylar, zaman tuzakları"
+    },
+    "emails": [
+      {
+        "id": "MAIL_01",
+        "from": "Genel Müdürlük",
+        "subject": "ACİL: Savunma Sanayii Başkanlığı (SSB) Heyeti Sunumu Hazırlığı",
+        "preview": "Yarın sabah gelecek heyet için projenin son durum raporu ve bütçe projeksiyonu eksik. Acil tamamlanması gerekiyor.",
+        "correctQuadrant": "Q1",
+        "points": 20,
+        "explanation": "Stratejik bir paydaş yönetimi ve kriz anı. Yapılmaması kurumsal risk taşır."
+      },
+      {
+        "id": "MAIL_02",
+        "from": "İnsan Kaynakları",
+        "subject": "Hatırlatma: Yıllık Performans Değerlendirme Formları",
+        "preview": "Ekibinizdeki 5 mühendisin performans formlarının sisteme girilmesi için son 3 gün.",
+        "correctQuadrant": "Q2",
+        "points": 15,
+        "explanation": "Liderlik sorumluluğu (ekip gelişimi) ancak anlık bir kriz değil. Planlanmalıdır."
+      },
+      {
+        "id": "MAIL_03",
+        "from": "Tedarik Birimi",
+        "subject": "Birim Toplantısı: Ofis Malzemeleri ve Kırtasiye İhtiyaçları",
+        "preview": "Yeni dönem için kalem, kağıt ve sarf malzeme taleplerini belirlemek üzere öğleden sonra toplantı yapılacaktır.",
+        "correctQuadrant": "Q3",
+        "points": 10,
+        "explanation": "Zaman baskısı var ama bir liderin bizzat ilgilenmesine gerek yok. Delege edilmelidir."
+      },
+      {
+        "id": "MAIL_04",
+        "from": "Dış Kaynaklar",
+        "subject": "Bülten: Sektörel Global Gelişmeler ve Makaleler",
+        "preview": "Haftalık savunma sanayii haber bülteni ekte sunulmuştur.",
+        "correctQuadrant": "Q4",
+        "points": 5,
+        "explanation": "Zaman kaybı yaratabilecek rutin bilgi akışı. Elenmeli veya boş vakitte bakılmalı."
+      }
+    ],
+    "scoring": {
+      "perfectScore": 50,
+      "partialCredit": true,
+      "adjacentQuadrantPenalty": 0.5
+    }
+  },
+  "DepartmentThemes": {
+    "description": "Departman temaları ve bağlamsal çapalar",
+    "departments": [
+      {
+        "id": "DEP_01",
+        "name": "Üretim",
+        "aliases": ["Üretim", "Operasyon", "Üretim / Operasyon"],
+        "themes": ["Hat duruşu", "Kalite kontrol sapması", "İş güvenliği riski", "Hammadde krizi"],
+        "criticalTerms": ["Kalifikasyon", "MIL-STD", "Seri üretim hattı", "Kalite belgelendirme"],
+        "aiInstruction": "Üretim sürekliliğini ve saha operasyonlarındaki kriz yönetimini merkeze al."
+      },
+      {
+        "id": "DEP_02",
+        "name": "Ar-Ge",
+        "aliases": ["Ar-Ge", "Tasarım", "Yazılım", "Mühendislik"],
+        "themes": ["Test başarısızlığı", "Tasarım revizyonu", "Teknik borç", "Patent süreci"],
+        "criticalTerms": ["Prototip", "Simülasyon verisi", "Teknik spesifikasyon", "Tasarım doğrulama"],
+        "aiInstruction": "İnovasyon süreçlerindeki tıkanıklıkları ve teknik zorlukları merkeze al."
+      },
+      {
+        "id": "DEP_03",
+        "name": "Program Yönetimi",
+        "aliases": ["Program Yönetimi", "İş Geliştirme", "Savunma Sistemleri"],
+        "themes": ["İhale takvimi", "Maliyet aşımı", "Paydaş yönetimi", "Rakip analizi"],
+        "criticalTerms": ["Milestone", "Bütçe varyansı", "Risk matrisi", "Teslimat planı"],
+        "aiInstruction": "Müşteri/kurum beklentileri, bütçe kısıtları ve stratejik planlama krizlerini merkeze al."
+      },
+      {
+        "id": "DEP_04",
+        "name": "Destek Birimleri",
+        "aliases": ["İnsan Kaynakları", "Finans", "Satın Alma", "Kalite", "İK"],
+        "themes": ["Süreç optimizasyonu", "Yetenek yönetimi", "Bütçe disiplini", "Kurumsal değişim"],
+        "criticalTerms": ["Verimlilik analizi", "Liyakat", "KPI", "ERP"],
+        "aiInstruction": "İç müşteri memnuniyeti, kaynakların verimli kullanımı ve kurumsal kültür krizlerini merkeze al."
+      }
+    ]
+  },
+  "AuthorizedUsers": {
+    "description": "Yetkili kullanıcılar",
+    "users": [
+      {
+        "id": "AUTH_01",
+        "username": "admin",
+        "password": "roketsan2024",
+        "role": "admin",
+        "name": "Sistem Yöneticisi"
+      },
+      {
+        "id": "AUTH_02",
+        "username": "ik_yonetici",
+        "password": "roketsan_ik",
+        "role": "hr_manager",
+        "name": "İK Yöneticisi"
+      }
+    ]
+  }
+}
