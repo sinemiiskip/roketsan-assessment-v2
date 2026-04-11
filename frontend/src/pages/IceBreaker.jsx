@@ -5,7 +5,7 @@ import { useAssessment } from '../context/AssessmentContext'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
-const API = 'https://roketsan-assessment.onrender.com'
+const API = 'http://localhost:3001'
 
 export default function IceBreaker() {
   const navigate = useNavigate()
