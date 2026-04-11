@@ -5,10 +5,14 @@ import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 export default function AudioResponse() {
   const navigate = useNavigate()
-  const { session, scenario, setAudioResult } = useAssessmentStore()
-  const [state, setState] = useState('idle') // idle | recording | recorded | transcribing | done
+  const { session, setAudioResult } = useAssessmentStore()
+  const [audioCase, setAudioCase] = useState(null)
+  const [loadingCase, setLoadingCase] = useState(true)
+  const [state, setState] = useState('idle')
   const [seconds, setSeconds] = useState(0)
   const [transcript, setTranscript] = useState('')
   const [bars, setBars] = useState(Array(40).fill(3))
@@ -20,10 +24,33 @@ export default function AudioResponse() {
   const animRef = useRef(null)
   const recognitionRef = useRef(null)
 
-  useEffect(() => () => {
-    clearInterval(timerRef.current)
-    cancelAnimationFrame(animRef.current)
+  useEffect(() => {
+    fetchAudioCase()
+    return () => {
+      clearInterval(timerRef.current)
+      cancelAnimationFrame(animRef.current)
+    }
   }, [])
+
+  async function fetchAudioCase() {
+    setLoadingCase(true)
+    try {
+      const res = await axios.post(`${API}/api/generate-audio-case`, {
+        session_id: session?.session_id
+      })
+      setAudioCase(res.data.audioCase)
+    } catch (err) {
+      setAudioCase({
+        caseTitle: 'Ekip Çatışması Yönetimi',
+        caseDescription: `${session?.department} departmanında iki kıdemli çalışan arasında proje önceliklendirmesi konusunda ciddi bir anlaşmazlık yaşanıyor.`,
+        question: `Siz ${session?.position} olarak bu çatışmayı nasıl yönetirsiniz?`,
+        context: 'Proje teslim tarihi 3 hafta sonra. Her iki çalışan da kritik roller üstleniyor.',
+        evaluationFocus: ['Çatışma yönetimi', 'Liderlik tarzı', 'İletişim becerisi']
+      })
+    } finally {
+      setLoadingCase(false)
+    }
+  }
 
   async function startRecording() {
     try {
@@ -36,15 +63,11 @@ export default function AudioResponse() {
       setState('recording')
       setSeconds(0)
       timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
-
-      // Waveform animation
       const animateWave = () => {
         setBars(Array(40).fill(0).map(() => Math.random() * 48 + 4))
         animRef.current = requestAnimationFrame(animateWave)
       }
       animateWave()
-
-      // Speech recognition
       if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition
         const rec = new SR()
@@ -53,9 +76,7 @@ export default function AudioResponse() {
         rec.interimResults = true
         rec.onresult = e => {
           let text = ''
-          for (let i = 0; i < e.results.length; i++) {
-            text += e.results[i][0].transcript + ' '
-          }
+          for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript + ' '
           setTranscript(text)
         }
         rec.start()
@@ -84,10 +105,11 @@ export default function AudioResponse() {
     setSubmitting(true)
     setState('transcribing')
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/submit-audio`, {
+      const res = await axios.post(`${API}/api/submit-audio`, {
         session_id: session?.session_id,
         transcript,
-        duration: seconds
+        duration: seconds,
+        caseTitle: audioCase?.caseTitle
       })
       setAudioResult(res.data.evaluation)
       setState('done')
@@ -101,6 +123,28 @@ export default function AudioResponse() {
   }
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
+  if (loadingCase) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 24 }}>
+        <div className="grid-bg" />
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+          <RoketsanLogo size={32} />
+          <div style={{ marginTop: 32, fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--accent-green)', letterSpacing: 2 }}>
+            ▶ YENİ VAKA HAZIRLANIYOR...
+          </div>
+          <div style={{ marginTop: 16, color: 'var(--text-muted)', fontSize: 14 }}>
+            {session?.position} pozisyonuna özel vaka üretiliyor
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 24 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-green)', animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', position: 'relative' }}>
@@ -118,76 +162,61 @@ export default function AudioResponse() {
         </div>
 
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '60px 24px' }}>
-          <div className="fade-in" style={{ textAlign: 'center', marginBottom: 48 }}>
-            <span className="badge badge-medium" style={{ marginBottom: 20, display: 'inline-flex' }}>SESLİ YANIT MODÜLü</span>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
-              Kriz Senaryosu — Sözlü Değerlendirme
+
+          {/* Case Card */}
+          <div className="fade-in" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-active)', borderRadius: 16, padding: '28px 32px', marginBottom: 32 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-green)', letterSpacing: 2, marginBottom: 12 }}>
+              ✦ SESLİ YANIT VAKASI — {session?.position?.toUpperCase()}
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>
+              {audioCase?.caseTitle}
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 15, maxWidth: 560, margin: '0 auto', lineHeight: 1.7 }}>
-              {scenario?.keyQuestion || 'Senaryo hakkındaki görüşlerinizi ve aksiyon planınızı sesli olarak paylaşın.'}
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7, marginBottom: 16 }}>
+              {audioCase?.caseDescription}
             </p>
+            {audioCase?.context && (
+              <div style={{ background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', letterSpacing: 2 }}>BAĞLAM: </span>
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{audioCase.context}</span>
+              </div>
+            )}
+            <div style={{ background: 'rgba(0,255,136,0.05)', border: '1px solid var(--border-active)', borderRadius: 8, padding: '16px 20px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-green)', letterSpacing: 2, marginBottom: 8 }}>SORU</div>
+              <p style={{ fontSize: 15, color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.6 }}>
+                {audioCase?.question}
+              </p>
+            </div>
           </div>
 
           {/* Waveform */}
-          <div className="fade-in-delay-1" style={{
-            background: 'var(--bg-card)', border: '1px solid var(--border-dim)',
-            borderRadius: 16, padding: '40px 32px', marginBottom: 32, textAlign: 'center'
-          }}>
-            {/* Timer */}
-            <div style={{
-              fontFamily: 'var(--font-mono)', fontSize: 48, fontWeight: 500,
-              color: state === 'recording' ? 'var(--accent-green)' : 'var(--text-muted)',
-              marginBottom: 32, letterSpacing: 4,
-              textShadow: state === 'recording' ? '0 0 20px rgba(0,255,136,0.5)' : 'none',
-              transition: 'all 0.3s ease'
-            }}>
+          <div className="fade-in-delay-1" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-dim)', borderRadius: 16, padding: '40px 32px', marginBottom: 32, textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 48, fontWeight: 500, color: state === 'recording' ? 'var(--accent-green)' : 'var(--text-muted)', marginBottom: 32, letterSpacing: 4, textShadow: state === 'recording' ? '0 0 20px rgba(0,255,136,0.5)' : 'none', transition: 'all 0.3s ease' }}>
               {fmt(seconds)}
             </div>
-
-            {/* Waveform bars */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, height: 64, marginBottom: 32 }}>
               {bars.map((h, i) => (
-                <div key={i} style={{
-                  width: 3, height: state === 'recording' ? h : 3, borderRadius: 2,
-                  background: state === 'recording'
-                    ? `rgba(0,255,136,${0.4 + (h / 52) * 0.6})`
-                    : 'var(--border-dim)',
-                  transition: state === 'recording' ? 'height 0.05s ease' : 'height 0.3s ease'
-                }} />
+                <div key={i} style={{ width: 3, height: state === 'recording' ? h : 3, borderRadius: 2, background: state === 'recording' ? `rgba(0,255,136,${0.4 + (h / 52) * 0.6})` : 'var(--border-dim)', transition: state === 'recording' ? 'height 0.05s ease' : 'height 0.3s ease' }} />
               ))}
             </div>
-
-            {/* Status */}
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: 2, color: 'var(--text-muted)', marginBottom: 32 }}>
               {state === 'idle' && '● MİKROFON HAZIR'}
-              {state === 'recording' && <span style={{ color: 'var(--accent-green)', animation: 'pulse 1s infinite' }}>● KAYIT DEVAM EDİYOR</span>}
+              {state === 'recording' && <span style={{ color: 'var(--accent-green)' }}>● KAYIT DEVAM EDİYOR</span>}
               {state === 'recorded' && <span style={{ color: 'var(--accent-blue)' }}>● KAYIT TAMAMLANDI</span>}
               {state === 'transcribing' && <span style={{ color: 'var(--warning)' }}>● ANALİZ EDİLİYOR...</span>}
               {state === 'done' && <span style={{ color: 'var(--accent-green)' }}>✓ TAMAMLANDI</span>}
             </div>
-
-            {/* Controls */}
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
               {state === 'idle' && (
-                <button className="btn-primary" onClick={startRecording} style={{ minWidth: 200 }}>
-                  ● Kaydı Başlat
-                </button>
+                <button className="btn-primary" onClick={startRecording} style={{ minWidth: 200 }}>● Kaydı Başlat</button>
               )}
               {state === 'recording' && (
-                <button onClick={stopRecording} style={{
-                  background: '#ef4444', color: 'white', border: 'none',
-                  padding: '14px 32px', borderRadius: 8, fontFamily: 'var(--font-display)',
-                  fontSize: 16, fontWeight: 700, letterSpacing: 1, cursor: 'pointer',
-                  minWidth: 200, textTransform: 'uppercase'
-                }}>
+                <button onClick={stopRecording} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '14px 32px', borderRadius: 8, fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, letterSpacing: 1, cursor: 'pointer', minWidth: 200, textTransform: 'uppercase' }}>
                   ■ Kaydı Durdur
                 </button>
               )}
               {state === 'recorded' && (
                 <>
-                  <button className="btn-secondary" onClick={() => { setState('idle'); setSeconds(0); setTranscript('') }}>
-                    ↺ Tekrar Kaydet
-                  </button>
+                  <button className="btn-secondary" onClick={() => { setState('idle'); setSeconds(0); setTranscript('') }}>↺ Tekrar Kaydet</button>
                   <button className="btn-primary" onClick={handleSubmit} disabled={submitting} style={{ minWidth: 200 }}>
                     {submitting ? 'Gönderiliyor...' : 'Yanıtı Gönder →'}
                   </button>
@@ -196,33 +225,21 @@ export default function AudioResponse() {
             </div>
           </div>
 
-          {/* Transcript preview */}
           {transcript && (
-            <div className="fade-in" style={{
-              background: 'var(--bg-card)', border: '1px solid var(--border-dim)',
-              borderRadius: 12, padding: '20px 24px'
-            }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 10 }}>
-                CANLI TRANSKRİPT
-              </div>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, fontStyle: 'italic' }}>
-                "{transcript}"
-              </p>
+            <div className="fade-in" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-dim)', borderRadius: 12, padding: '20px 24px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 10 }}>CANLI TRANSKRİPT</div>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.7, fontStyle: 'italic' }}>"{transcript}"</p>
             </div>
           )}
 
-          {/* Tips */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 24 }}>
             {[
               { icon: '🎯', tip: 'Net ve yapılandırılmış cevap verin' },
-              { icon: '⏱', tip: '3-5 dakika idealdir' },
+              { icon: '⏱', tip: '2-4 dakika idealdir' },
               { icon: '💡', tip: 'Somut örnekler kullanın' },
               { icon: '🎤', tip: 'Sakin ve özgüvenli konuşun' },
             ].map(item => (
-              <div key={item.tip} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-                background: 'rgba(0,255,136,0.03)', border: '1px solid var(--border-dim)', borderRadius: 8
-              }}>
+              <div key={item.tip} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(0,255,136,0.03)', border: '1px solid var(--border-dim)', borderRadius: 8 }}>
                 <span style={{ fontSize: 16 }}>{item.icon}</span>
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{item.tip}</span>
               </div>
