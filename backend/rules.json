@@ -6,13 +6,27 @@
         "id": "LDR_01",
         "name": "Stratejik Çeviklik ve Karar Verme",
         "weight": 0.30,
+        "maxScore": 100,
+        "scoringCriteria": {
+          "90-100": "Sistematik risk analizi yapar, veriye dayalı karar verir, uzun vadeli etkileri değerlendirir, alternatif senaryolar üretir",
+          "70-89": "Genel stratejik bakış var, risk farkındалığı mevcut ancak alternatif senaryolar sınırlı",
+          "50-69": "Kısa vadeli odaklı, reaktif karar verme eğilimi, stratejik boyut zayıf",
+          "0-49": "Karar vermekten kaçınır, stratejik düşünce yok, salt operasyonel odak"
+        },
         "keywords": ["vizyon", "gelecek projeksiyonu", "risk analizi", "milli teknoloji", "stratejik öncelik", "çevik yaklaşım", "pazar analizi", "rekabet avantajı", "uzun vadeli planlama", "veri odaklı", "inovasyon", "teknolojik trend", "makro bakış", "sürdürülebilirlik", "portföy yönetimi", "senaryo planlama", "sistem düşüncesi", "fırsat odaklı", "katma değer", "yerlileştirme", "savunma stratejisi", "vizyoner bakış"],
-        "negativeKeywords": ["kararsızlık", "bekle-gör", "riskten kaçınma", "statüko", "dar görüşlü", "günü kurtarma", "plansızlık", "tepkisel", "vizyonsuzluk", "analiz felci", "strateji yoksunluğu"]
+        "negativeKeywords": ["kararsızlık", "bekle-gör", "riskten kaçınma", "statüko", "dar görüşlü", "günü kurtarma", "plansızlık", "tepkisel", "vizyonsuzluk", "analiz felci"]
       },
       {
         "id": "LDR_02",
         "name": "İnisiyatif ve Sorumluluk Alma",
         "weight": 0.25,
+        "maxScore": 100,
+        "scoringCriteria": {
+          "90-100": "Problemi sahiplenir, hızla aksiyon alır, çözüm üretir, sonuca kadar takip eder",
+          "70-89": "Genel olarak inisiyatif kullanır ancak zaman zaman onay bekler",
+          "50-69": "Sorunu fark eder ama çözüm üretmek yerine haber vermeyi tercih eder",
+          "0-49": "Pasif kalır, sorumluluğu başkasına yükler, harekete geçmez"
+        },
         "keywords": ["sorumluluk bende", "inisiyatif alıyorum", "çözüm odaklıyım", "aksiyon planı", "milli görev", "proaktif", "kararlılık", "sonuç odaklı", "sahiplenme", "özgüven", "hızlı karar", "cesaret", "çözüm üretme", "bitiricilik", "aktif rol"],
         "negativeKeywords": ["topu başkasına atma", "benim işim değil", "onay bekliyorum", "pasif", "erteleme", "kaçınma", "bahaneler", "hareketsiz", "çekingen", "sorumluluktan kaçma"]
       },
@@ -20,6 +34,13 @@
         "id": "LDR_03",
         "name": "Ekip Geliştirme ve İş Birliği",
         "weight": 0.25,
+        "maxScore": 100,
+        "scoringCriteria": {
+          "90-100": "Ekibi aktif geliştirir, delegasyon yapar, çatışmayı fırsata çevirir, motivasyonu yüksek tutar",
+          "70-89": "Ekip odaklı düşünür, iş birliğine açık ancak delegasyon sınırlı",
+          "50-69": "Ekip farkındalığı var ama bireysel çalışmayı tercih eder",
+          "0-49": "Ekibi dışlar, mikro yönetim yapar veya iletişim kurmaz"
+        },
         "keywords": ["ekip ruhu", "mentorluk", "yetkilendirme", "delegasyon", "bilgi paylaşımı", "sinerji", "koçluk", "iş birliği", "empati", "açık iletişim", "geri bildirim", "motivasyon", "çatışma yönetimi", "destekleyici", "kapsayıcı", "takdir"],
         "negativeKeywords": ["mikro yönetim", "suçlayıcı", "iletişim kopukluğu", "ego", "dışlama", "güvensizlik", "otoriter", "bencil", "yıkıcı eleştiri", "baskıcı"]
       },
@@ -27,34 +48,193 @@
         "id": "LDR_04",
         "name": "Etik Değerler ve Kurumsal Disiplin",
         "weight": 0.20,
+        "maxScore": 100,
+        "scoringCriteria": {
+          "90-100": "Etik ilkeleri her koşulda uygular, şeffaf raporlar, kurumsal değerleri içselleştirmiştir",
+          "70-89": "Genel olarak etik davranır, prosedürlere uyar ancak baskı altında sınır zorlar",
+          "50-69": "Etik farkındalık var ancak pratik uygulamada tutarsız",
+          "0-49": "Etik ihlaller görmezden gelir, prosedürü atlar, şeffaf değil"
+        },
         "keywords": ["etik ilkeler", "şeffaflık", "güvenlik protokolü", "dürüst raporlama", "kurumsal disiplin", "liyakat", "adalet", "tutarlılık", "dürüstlük", "hesap verebilirlik", "milli çıkar", "güvenilirlik", "uyumluluk"],
         "negativeKeywords": ["hatayı gizleme", "prosedür ihlali", "bilgi sızdırma", "adaletsiz", "kayırmacılık", "sadakatsizlik", "tutarsız", "çıkar çatışması", "suistimal", "güvenlik zafiyeti"]
       }
     ]
+  },
+  "ScoringRules": {
+    "description": "Her modül için kesin puanlama kuralları",
+    "modules": {
+      "IceBreaker": {
+        "weight": 0.15,
+        "maxScore": 100,
+        "description": "4 çoktan seçmeli soru, her soru max 3 puan",
+        "calculation": "Her sorudaki seçilen seçeneğin puanı toplanır (max 12), 100 üzerinden normalize edilir",
+        "rules": [
+          "Her soru için sadece 1 seçenek seçilebilir",
+          "Seçenek puanları: 3=Mükemmel, 2=İyi, 1=Orta, 0=Zayıf",
+          "Toplam ham puan / 12 * 100 = Modül puanı"
+        ]
+      },
+      "Scenario": {
+        "weight": 0.35,
+        "maxScore": 100,
+        "description": "Yazılı kriz raporu değerlendirmesi",
+        "evaluationDimensions": {
+          "problemAnalysis": {
+            "weight": 0.25,
+            "description": "Sorunu doğru tespit etme ve kök neden analizi",
+            "scoring": {
+              "25": "Çok boyutlu analiz, kök neden tespiti, etkileşimleri görür",
+              "18": "Temel analiz var, kısmen eksik",
+              "10": "Yüzeysel analiz",
+              "0": "Analiz yok veya hatalı"
+            }
+          },
+          "actionPlan": {
+            "weight": 0.30,
+            "description": "Somut, önceliklendirilmiş aksiyon planı",
+            "scoring": {
+              "30": "Net adımlar, zaman çizelgesi, kaynak planı, önceliklendirme mevcut",
+              "22": "Genel aksiyon var, detay eksik",
+              "12": "Belirsiz öneriler",
+              "0": "Aksiyon yok"
+            }
+          },
+          "stakeholderManagement": {
+            "weight": 0.20,
+            "description": "Paydaşları tanımlama ve yönetme",
+            "scoring": {
+              "20": "Tüm paydaşlar tanımlanmış, iletişim planı net",
+              "14": "Temel paydaşlar var, iletişim eksik",
+              "7": "Kısmi farkındalık",
+              "0": "Paydaş göz ardı edilmiş"
+            }
+          },
+          "leadershipVoice": {
+            "weight": 0.25,
+            "description": "Liderlik dili, sahiplenme, özgüven",
+            "scoring": {
+              "25": "Güçlü sahiplenme, net karar dili, motive edici",
+              "18": "Genel liderlik tonu var",
+              "10": "Pasif dil, belirsiz sorumluluk",
+              "0": "Sorumluluktan kaçma, belirsiz dil"
+            }
+          }
+        },
+        "rules": [
+          "AI her boyutu 0-max arası puanlar",
+          "Boyut puanları toplanır, toplam 100 üzerinden hesaplanır",
+          "Minimum kelime sayısı karşılanmazsa maksimum 60 puan verilebilir",
+          "Kopya veya anlamsız metin tespitinde 0 puan verilir"
+        ]
+      },
+      "Audio": {
+        "weight": 0.30,
+        "maxScore": 100,
+        "description": "Sesli yanıt analizi",
+        "evaluationDimensions": {
+          "contentQuality": {
+            "weight": 0.50,
+            "description": "İçerik kalitesi — ne söylendi",
+            "scoring": {
+              "50": "Yapılandırılmış, somut öneriler, liderlik dili güçlü, yetkinlik göstergeleri net",
+              "38": "Genel içerik iyi, bazı somut noktalar var",
+              "25": "Yüzeysel içerik, genel ifadeler",
+              "0": "Konuyla ilgisiz veya boş"
+            }
+          },
+          "deliveryQuality": {
+            "weight": 0.30,
+            "description": "Sunum kalitesi — nasıl söylendi",
+            "scoring": {
+              "30": "Akıcı, özgüvenli, dolgu kelimesi az, uygun hız",
+              "22": "Genel olarak akıcı, hafif dolgu kelimesi",
+              "12": "Sık dolgu kelimesi veya çok hızlı/yavaş",
+              "0": "Anlaşılmaz veya çok kısa"
+            }
+          },
+          "structureClarity": {
+            "weight": 0.20,
+            "description": "Yapı ve netlik",
+            "scoring": {
+              "20": "Giriş-gelişme-sonuç net, mantıksal akış var",
+              "14": "Genel yapı var ama dağınık",
+              "7": "Yapısız, rastgele",
+              "0": "Yapı yok"
+            }
+          }
+        },
+        "fillerWordPenalty": {
+          "threshold": 0.10,
+          "description": "Konuşmanın %10'undan fazlası dolgu kelimesiyse -10 puan"
+        },
+        "durationRules": {
+          "minimum": 60,
+          "maximum": 300,
+          "ideal": "120-240",
+          "tooShortPenalty": "60 saniyeden kısa: maksimum 50 puan",
+          "tooLongNote": "300 saniyeden uzun: içerik kalitesine göre değerlendirilir"
+        }
+      },
+      "InTray": {
+        "weight": 0.20,
+        "maxScore": 100,
+        "description": "E-posta önceliklendirme — Eisenhower Matrisi",
+        "quadrantPoints": {
+          "Q1": 20,
+          "Q2": 15,
+          "Q3": 10,
+          "Q4": 5
+        },
+        "scoringRules": [
+          "Doğru kadran: tam puan",
+          "Bir kadran yanında (Q1↔Q2 veya Q3↔Q4): %50 puan",
+          "Tamamen yanlış kadran (Q1→Q4 gibi): 0 puan",
+          "Toplam ham puan / maksimum ham puan * 100 = Modül puanı"
+        ]
+      }
+    },
+    "overallScoring": {
+      "formula": "(IceBreaker * 0.15) + (Scenario * 0.35) + (Audio * 0.30) + (InTray * 0.20)",
+      "gradeBands": {
+        "A+": { "min": 93, "max": 100, "label": "Olağanüstü Lider", "description": "Tüm yetkinliklerde üstün performans. Üst düzey görevler için hazır." },
+        "A":  { "min": 85, "max": 92,  "label": "Güçlü Lider", "description": "Liderlik potansiyeli belirgin. Gelişim planıyla hızlı ilerleme beklenir." },
+        "B+": { "min": 75, "max": 84,  "label": "Gelişen Lider", "description": "Temel yetkinlikler mevcut. Belirli alanlarda gelişim gerekli." },
+        "B":  { "min": 65, "max": 74,  "label": "Yeterli", "description": "Ortalama performans. Koçluk ve gelişim programları önerilir." },
+        "C+": { "min": 55, "max": 64,  "label": "Gelişim Gerekli", "description": "Temel yetkinliklerde eksiklikler. Yapılandırılmış gelişim planı şart." },
+        "C":  { "min": 0,  "max": 54,  "label": "Yetersiz", "description": "Liderlik yetkinlikleri bu aşamada yeterli değil. Kapsamlı gelişim gerekli." }
+      },
+      "importantRules": [
+        "Puanlar YALNIZCA yetkili HR portalında görünür",
+        "Aday sonuç ekranında puan göremez",
+        "AI her modülü kurallara göre puanlar, kurallara aykırı hareket edemez",
+        "Tüm puanlar Supabase'e kaydedilir ve değiştirilemez",
+        "Her modül puanı bağımsız olarak hesaplanır ve loglanır"
+      ]
+    }
   },
   "HierarchyMatrix": {
     "description": "Roketsan Hiyerarşi ve Yetki Matrisi",
     "levels": [
       {
         "id": "POZ_01",
-        "title": "Kıdemli Mühendis",
+        "title": "Kıdemli Mühendis / Uzman",
         "difficulty": 1,
         "scenarioComplexity": "Düşük-Orta",
         "authorityScope": "Teknik süreçler ve teknik mentorluk",
         "decisionAuthority": "Operasyonel iyileştirme, teknik yöntem seçimi",
         "timeLimit": 300,
-        "aiScenarioFocus": "Teknik anlaşmazlıklar, iş yapış şekli farklılıkları ve bireysel inisiyatif gerektiren durumlar",
+        "aiScenarioFocus": "Teknik anlaşmazlıklar, iş yapış şekli farklılıkları, bireysel inisiyatif gerektiren teknik kriz",
         "matchKeywords": ["mühendis", "kıdemli mühendis", "uzman", "kıdemli uzman", "senior", "sr."]
       },
       {
         "id": "POZ_02",
-        "title": "Şef / Takım Lideri",
+        "title": "Şef / Takım Lideri / Proje Yöneticisi",
         "difficulty": 2,
         "scenarioComplexity": "Orta-Yüksek",
         "authorityScope": "Ekip içi uyum, kaynak dağılımı, birimler arası koordinasyon",
         "decisionAuthority": "Ekip içi önceliklendirme, personel motivasyonu, günlük/haftalık kriz yönetimi",
         "timeLimit": 240,
-        "aiScenarioFocus": "Alt çalışanlar arası çatışmalar, ani kaynak eksiklikleri ve operasyonel darboğaz senaryoları",
+        "aiScenarioFocus": "Alt çalışanlar arası çatışmalar, ani kaynak eksiklikleri, operasyonel darboğaz, ekip motivasyonu",
         "matchKeywords": ["şef", "takım lideri", "team lead", "lider", "koordinatör", "proje yöneticisi"]
       },
       {
@@ -65,7 +245,7 @@
         "authorityScope": "Stratejik bütçe yönetimi, üst yönetim raporlaması, departman vizyonu",
         "decisionAuthority": "Departman bütçesi, stratejik ortaklıklar, kurumsal risk iştahı",
         "timeLimit": 180,
-        "aiScenarioFocus": "Makro ekonomik krizler, kurumsal itibar riskleri, SSB ile stratejik hizalanma senaryoları",
+        "aiScenarioFocus": "Makro ekonomik krizler, kurumsal itibar riskleri, SSB ile stratejik hizalanma, bütçe krizi",
         "matchKeywords": ["müdür", "direktör", "başkan", "vp", "genel müdür", "director", "manager"]
       }
     ]
@@ -80,87 +260,22 @@
         "idealMax": 150,
         "unit": "kelime/dakika",
         "scoring": {
-          "tooFast": { "threshold": 200, "score": -5, "note": "Anksiyete, panik veya aşırı heyecan belirtisi." },
-          "tooSlow": { "threshold": 80, "score": -5, "note": "Kararsızlık, özgüven eksikliği veya hazırlıksız olma." },
-          "balanced": { "score": 10, "note": "Kontrollü liderlik, ikna edici ve net anlatım." }
-        }
-      },
-      {
-        "id": "PAUSE",
-        "name": "Duraksamalar",
-        "scoring": {
-          "shortPause": { "note": "Düşünerek konuşma, vurgu yapma. Pozitif.", "score": 3 },
-          "longPause": { "threshold": 3, "unit": "saniye", "score": -5, "note": "Bloke olma, belirsizlik veya stres altında donma." }
+          "tooFast": { "threshold": 200, "score": -5, "note": "Anksiyete veya aşırı heyecan belirtisi." },
+          "tooSlow": { "threshold": 80, "score": -5, "note": "Kararsızlık veya özgüven eksikliği." },
+          "balanced": { "score": 10, "note": "Kontrollü liderlik, ikna edici anlatım." }
         }
       },
       {
         "id": "SENTIMENT",
         "name": "Duygu Tonu",
         "tones": [
-          { "tone": "Empatik", "keywords": ["anlıyorum", "ekibim", "birlikte", "destek", "empati"], "score": 10, "context": "Ekip yönetimi ve çatışma çözme vakalarında." },
-          { "tone": "Kararlı", "keywords": ["kesinlikle", "derhal", "hemen", "kararlıyım", "aksiyon"], "score": 10, "context": "Kriz ve stratejik karar anlarında." },
-          { "tone": "Savunmacı", "keywords": ["benim hatam değil", "ben değildim", "bana sormadılar"], "score": -10, "context": "Hata kabulü ve geri bildirim anlarında." }
+          { "tone": "Empatik", "keywords": ["anlıyorum", "ekibim", "birlikte", "destek", "empati"], "score": 10 },
+          { "tone": "Kararlı", "keywords": ["kesinlikle", "derhal", "hemen", "kararlıyım", "aksiyon"], "score": 10 },
+          { "tone": "Savunmacı", "keywords": ["benim hatam değil", "ben değildim", "bana sormadılar"], "score": -10 }
         ]
       }
     ],
-    "fillerWords": ["yani", "şey", "eee", "mmm", "uh", "um", "hani", "işte", "falan"],
-    "scoringWeights": {
-      "content": 0.50,
-      "delivery": 0.30,
-      "structure": 0.20
-    }
-  },
-  "InTrayMatrix": {
-    "description": "Roketsan In-Tray / Eisenhower Matrisi",
-    "quadrantDefinitions": {
-      "Q1": "Hemen Yap — Krizler, son teslim tarihi gelen işler",
-      "Q2": "Planla / Zaman Ayır — Stratejik planlama, ekip gelişimi, ilişkiler",
-      "Q3": "Delege Et — Rutin toplantılar, bazı e-postalar",
-      "Q4": "Ele / İptal Et — Gereksiz detaylar, zaman tuzakları"
-    },
-    "emails": [
-      {
-        "id": "MAIL_01",
-        "from": "Genel Müdürlük",
-        "subject": "ACİL: Savunma Sanayii Başkanlığı (SSB) Heyeti Sunumu Hazırlığı",
-        "preview": "Yarın sabah gelecek heyet için projenin son durum raporu ve bütçe projeksiyonu eksik. Acil tamamlanması gerekiyor.",
-        "correctQuadrant": "Q1",
-        "points": 20,
-        "explanation": "Stratejik bir paydaş yönetimi ve kriz anı. Yapılmaması kurumsal risk taşır."
-      },
-      {
-        "id": "MAIL_02",
-        "from": "İnsan Kaynakları",
-        "subject": "Hatırlatma: Yıllık Performans Değerlendirme Formları",
-        "preview": "Ekibinizdeki 5 mühendisin performans formlarının sisteme girilmesi için son 3 gün.",
-        "correctQuadrant": "Q2",
-        "points": 15,
-        "explanation": "Liderlik sorumluluğu (ekip gelişimi) ancak anlık bir kriz değil. Planlanmalıdır."
-      },
-      {
-        "id": "MAIL_03",
-        "from": "Tedarik Birimi",
-        "subject": "Birim Toplantısı: Ofis Malzemeleri ve Kırtasiye İhtiyaçları",
-        "preview": "Yeni dönem için kalem, kağıt ve sarf malzeme taleplerini belirlemek üzere öğleden sonra toplantı yapılacaktır.",
-        "correctQuadrant": "Q3",
-        "points": 10,
-        "explanation": "Zaman baskısı var ama bir liderin bizzat ilgilenmesine gerek yok. Delege edilmelidir."
-      },
-      {
-        "id": "MAIL_04",
-        "from": "Dış Kaynaklar",
-        "subject": "Bülten: Sektörel Global Gelişmeler ve Makaleler",
-        "preview": "Haftalık savunma sanayii haber bülteni ekte sunulmuştur.",
-        "correctQuadrant": "Q4",
-        "points": 5,
-        "explanation": "Zaman kaybı yaratabilecek rutin bilgi akışı. Elenmeli veya boş vakitte bakılmalı."
-      }
-    ],
-    "scoring": {
-      "perfectScore": 50,
-      "partialCredit": true,
-      "adjacentQuadrantPenalty": 0.5
-    }
+    "fillerWords": ["yani", "şey", "eee", "mmm", "uh", "um", "hani", "işte", "falan"]
   },
   "DepartmentThemes": {
     "description": "Departman temaları ve bağlamsal çapalar",
@@ -200,7 +315,7 @@
     ]
   },
   "AuthorizedUsers": {
-    "description": "Yetkili kullanıcılar",
+    "description": "Yetkili kullanıcılar — şifreler production'da bcrypt ile hashlenmeli",
     "users": [
       {
         "id": "AUTH_01",
