@@ -8,8 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // ── Security headers ──────────────────────────────────────────────
-app.use(helmet());
-
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
 // ── CORS from environment variable (no hardcoded URLs) ───────────
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
