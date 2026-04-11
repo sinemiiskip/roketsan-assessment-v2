@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 
 const DEPARTMENTS = ['Mühendislik', 'Ar-Ge', 'Üretim', 'Kalite', 'İnsan Kaynakları', 'Satın Alma', 'Savunma Sistemleri', 'Yazılım']
@@ -9,7 +9,7 @@ const POSITIONS = ['Mühendis', 'Kıdemli Mühendis', 'Uzman', 'Kıdemli Uzman',
 
 export default function Onboarding() {
   const navigate = useNavigate()
-  const { setSession } = useAssessment()
+  const { setSession } = useAssessmentStore()
   const [form, setForm] = useState({ name: '', department: '', position: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -23,7 +23,7 @@ export default function Onboarding() {
     setLoading(true)
     setError('')
     try {
-      const res = await axios.post('https://roketsan-assessment.onrender.com/api/init-session', form)
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/init-session`, form)
       setSession(res.data)
       navigate('/icebreaker')
     } catch (err) {

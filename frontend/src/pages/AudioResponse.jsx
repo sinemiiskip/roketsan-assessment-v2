@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
 export default function AudioResponse() {
   const navigate = useNavigate()
-  const { session, scenario, setAudioResult } = useAssessment()
+  const { session, scenario, setAudioResult } = useAssessmentStore()
   const [state, setState] = useState('idle') // idle | recording | recorded | transcribing | done
   const [seconds, setSeconds] = useState(0)
   const [transcript, setTranscript] = useState('')
@@ -84,7 +84,7 @@ export default function AudioResponse() {
     setSubmitting(true)
     setState('transcribing')
     try {
-      const res = await axios.post('https://roketsan-assessment.onrender.com/api/submit-audio', {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/submit-audio`, {
         session_id: session?.session_id,
         transcript,
         duration: seconds

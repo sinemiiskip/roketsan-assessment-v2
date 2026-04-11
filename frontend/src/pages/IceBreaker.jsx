@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
-const API = 'http://localhost:3001'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 export default function IceBreaker() {
   const navigate = useNavigate()
-  const { session, setIceBreakerResult } = useAssessment()
+  const { session, setIceBreakerResult } = useAssessmentStore()
   const [questions, setQuestions] = useState([])
   const [loading, setLoading] = useState(true)
   const [current, setCurrent] = useState(0)

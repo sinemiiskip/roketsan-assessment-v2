@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
-const API = 'https://roketsan-assessment.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 const QUADRANTS = [
   { id: 'Q1', label: 'Acil & Önemli', sub: 'Hemen Yap', color: '#ef4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.3)', icon: '🔴' },
@@ -16,7 +16,7 @@ const QUADRANTS = [
 
 export default function InTray() {
   const navigate = useNavigate()
-  const { session, setIntrayResult } = useAssessment()
+  const { session, setIntrayResult } = useAssessmentStore()
   const [emails, setEmails] = useState([])
   const [loading, setLoading] = useState(true)
   const [placements, setPlacements] = useState({})

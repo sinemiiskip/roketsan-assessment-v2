@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 import StepIndicator from '../components/StepIndicator'
 
@@ -13,7 +13,7 @@ const URGENCY_COLORS = {
 
 export default function Scenario() {
   const navigate = useNavigate()
-  const { session, scenario, setScenario, setScenarioResult } = useAssessment()
+  const { session, scenario, setScenario, setScenarioResult } = useAssessmentStore()
   const [loading, setLoading] = useState(true)
   const [report, setReport] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -28,7 +28,7 @@ export default function Scenario() {
   async function generateScenario() {
     setLoading(true)
     try {
-      const res = await axios.post('https://roketsan-assessment.onrender.com/api/generate-content', {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/generate-content`, {
         session_id: session?.session_id
       })
       setScenario(res.data.scenario)

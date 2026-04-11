@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { useAssessment } from '../context/AssessmentContext'
+import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 
-const API = 'https://roketsan-assessment.onrender.com'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 export default function Outro() {
-  const { session, audioResult, intrayResult, iceBreakerResult } = useAssessment()
+  const { session, audioResult, intrayResult, iceBreakerResult } = useAssessmentStore()
   const [visible, setVisible] = useState(false)
   const [report, setReport] = useState(null)
   const [loadingReport, setLoadingReport] = useState(true)
