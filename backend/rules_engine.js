@@ -48,33 +48,41 @@ function evaluateTranscript(transcript) {
   const rules = loadRules();
   if (!rules) return { overallScore: 0 };
   const { CompetencyMap, AcousticRubric } = rules;
+
+  // Guard against missing scoringWeights
+  const w = AcousticRubric?.scoringWeights || { content: 0.5, delivery: 0.3, structure: 0.2 };
+
   const words = transcript.trim().split(/\s+/);
   const wordCount = words.length;
-  const fillerCount = words.filter(w => AcousticRubric.fillerWords.includes(w.toLowerCase())).length;
+  const fillerCount = words.filter(w => AcousticRubric?.fillerWords?.includes(w.toLowerCase())).length;
   const fillerRatio = wordCount > 0 ? fillerCount / wordCount : 0;
+
   let contentScore = 0;
   const competencyScores = {};
   CompetencyMap.competencies.forEach(comp => {
     const matched = comp.keywords.filter(kw => transcript.toLowerCase().includes(kw.toLowerCase()));
-    const negMatched = comp.negativeKeywords.filter(kw => transcript.toLowerCase().includes(kw.toLowerCase()));
+    const negMatched = (comp.negativeKeywords || []).filter(kw => transcript.toLowerCase().includes(kw.toLowerCase()));
     const raw = comp.keywords.length > 0 ? (matched.length / Math.min(comp.keywords.length, 10)) * 100 : 50;
     const adjusted = Math.max(0, Math.min(100, raw - negMatched.length * 15));
     competencyScores[comp.id] = { name: comp.name, score: Math.round(adjusted), matched, weight: comp.weight };
     contentScore += adjusted * comp.weight;
   });
+
   let sentimentBonus = 0;
   const detectedTones = [];
-  AcousticRubric.parameters.find(p => p.id === 'SENTIMENT')?.tones.forEach(t => {
+  AcousticRubric?.parameters?.find(p => p.id === 'SENTIMENT')?.tones.forEach(t => {
     const hit = t.keywords?.some(kw => transcript.toLowerCase().includes(kw.toLowerCase()));
     if (hit) { sentimentBonus += t.score; detectedTones.push(t.tone); }
   });
+
   const deliveryScore = Math.max(0, Math.min(100, 70 - fillerRatio * 30 + Math.min(sentimentBonus, 20)));
   const structureScore = wordCount < 30 ? 20 : wordCount < 80 ? 50 : wordCount < 150 ? 75 : 90;
-  const w = AcousticRubric.scoringWeights;
   const overallScore = Math.round(contentScore * w.content + deliveryScore * w.delivery + structureScore * w.structure);
+
   const feedback = [];
   if (fillerRatio > 0.05) feedback.push(`Dolgu kelime oranı yüksek (%${Math.round(fillerRatio * 100)}).`);
   if (wordCount < 50) feedback.push('Yanıt çok kısa.');
+
   return { competencyScores, contentScore: Math.round(contentScore), deliveryScore: Math.round(deliveryScore), structureScore: Math.round(structureScore), overallScore: Math.max(0, Math.min(100, overallScore)), wordCount, fillerWordCount: fillerCount, detectedTones, feedback };
 }
 

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { evaluateTranscript, loadRules } = require('../rules_engine');
-const { getSession, updateSession } = require('../store/sessionStore');
+const { getSessionWithFallback, updateSession } = require('../store/sessionStore');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -11,7 +11,7 @@ router.post('/submit-audio', async (req, res) => {
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
   if (!transcript) return res.status(400).json({ error: 'transcript gerekli' });
 
-  const session = getSession(session_id);
+  const session = await getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const rules = loadRules();
@@ -75,10 +75,8 @@ Lütfen aşağıdaki JSON formatında detaylı analiz yap:
     const result = await model.generateContent(prompt);
     const text = result.response.text().replace(/```json|```/g, '').trim();
     aiAnalysis = JSON.parse(text);
-
     sentimentAnalysis = aiAnalysis.sentimentAnalysis;
 
-    // 3. Tutarlılık Skoru — AI skoru vs Kural tabanlı skor karşılaştırması
     const aiOverall = aiAnalysis.overallScore || 0;
     const ruleOverall = ruleBasedEval.overallScore || 0;
     const diff = Math.abs(aiOverall - ruleOverall);
@@ -97,7 +95,6 @@ Lütfen aşağıdaki JSON formatında detaylı analiz yap:
 
   } catch (err) {
     console.error('[submit-audio AI]', err.message);
-    // AI başarısız olsa bile kural tabanlı sonuçla devam et
     consistencyScore = {
       aiScore: null,
       ruleScore: ruleBasedEval.overallScore,
