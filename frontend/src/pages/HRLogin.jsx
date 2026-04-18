@@ -20,6 +20,7 @@ export default function HRLogin() {
       const res = await axios.post(`${API}/api/auth/login`, { username, password })
       localStorage.setItem('hr_token', res.data.token)
       localStorage.setItem('hr_user', JSON.stringify(res.data.user))
+      localStorage.setItem('hr_auth', 'true')
       navigate('/hr/dashboard')
     } catch (err) {
       setError(err.response?.data?.error || 'Kullanıcı adı veya şifre hatalı.')
