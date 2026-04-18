@@ -18,7 +18,7 @@ async function callGemini(prompt) {
 router.post('/generate-icebreaker', async (req, res) => {
   const { session_id } = req.body;
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
-  const session = getSession(session_id);
+  const session = getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const rules = loadRules();
@@ -76,7 +76,7 @@ FORMAT:
 router.post('/generate-content', async (req, res) => {
   const { session_id } = req.body;
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
-  const session = getSession(session_id);
+  const session = getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
@@ -126,7 +126,7 @@ FORMAT:
 router.post('/generate-audio-case', async (req, res) => {
   const { session_id } = req.body;
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
-  const session = getSession(session_id);
+  const session = getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
@@ -169,7 +169,7 @@ FORMAT:
 router.post('/generate-intray', async (req, res) => {
   const { session_id } = req.body;
   if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
-  const session = getSession(session_id);
+  const session = getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const dept = resolveDepartment(session.department);
