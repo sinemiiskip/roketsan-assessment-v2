@@ -1,18 +1,35 @@
 import { useEffect, useState } from 'react'
 import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
+import axios from 'axios'
+
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 export default function Outro() {
-  const { session, clearAssessment } = useAssessmentStore()
+  const { session, iceBreakerResult, scenarioResult, audioResult, intrayResult, clearAssessment } = useAssessmentStore()
   const [visible, setVisible] = useState(false)
   const [survey, setSurvey] = useState({ overall: 0, interface: 0, fairness: 0, submitted: false })
 
   useEffect(() => {
     setTimeout(() => setVisible(true), 300)
-    // Clear assessment data from localStorage after completion
-    // Small delay to ensure data was saved to backend first
-    setTimeout(() => clearAssessment(), 3000)
+    saveResults()
+    setTimeout(() => clearAssessment(), 5000)
   }, [])
+
+  async function saveResults() {
+    if (!session?.session_id) return
+    try {
+      await axios.post(`${API}/api/save-results`, {
+        session_id: session.session_id,
+        iceBreakerResult,
+        scenarioResult,
+        audioResult,
+        intrayResult,
+      })
+    } catch (err) {
+      console.error('[Outro] saveResults error:', err.message)
+    }
+  }
 
   function handleSurveySubmit() {
     setSurvey(s => ({ ...s, submitted: true }))
@@ -31,7 +48,6 @@ export default function Outro() {
             <RoketsanLogo size={28} />
           </div>
 
-          {/* Animated checkmark */}
           <div style={{ position: 'relative', width: 100, height: 100, margin: '0 auto 32px' }}>
             <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
               <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(0,255,136,0.15)" strokeWidth="2" />
@@ -76,7 +92,7 @@ export default function Outro() {
           </div>
         </div>
 
-        {/* Completed modules summary — no scores */}
+        {/* Completed modules summary */}
         <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-dim)', borderRadius: 16, padding: '24px', marginBottom: 24 }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 16 }}>
             TAMAMLANAN MODÜLLER

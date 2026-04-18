@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { getAllCandidates } = require('../store/sessionStore');
+const { getAllCandidates, saveResults } = require('../store/sessionStore');
 
 // JWT doğrulama middleware
 function authMiddleware(req, res, next) {
@@ -24,6 +24,18 @@ router.get('/candidates', authMiddleware, async (req, res) => {
     res.json({ success: true, candidates });
   } catch (err) {
     res.status(500).json({ error: 'Adaylar getirilemedi', detail: err.message });
+  }
+});
+
+// POST /api/save-results — değerlendirme sonuçlarını kaydet
+router.post('/save-results', async (req, res) => {
+  const { session_id, iceBreakerResult, scenarioResult, audioResult, intrayResult } = req.body;
+  if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
+  try {
+    const result = await saveResults(session_id, { iceBreakerResult, scenarioResult, audioResult, intrayResult });
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
