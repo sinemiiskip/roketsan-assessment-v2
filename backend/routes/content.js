@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { buildScenarioPrompt, loadRules, resolveDepartment } = require('../rules_engine');
-const { getSession, updateSession } = require('../store/sessionStore');
+const { getSessionWithFallback, updateSession } = require('../store/sessionStore');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 

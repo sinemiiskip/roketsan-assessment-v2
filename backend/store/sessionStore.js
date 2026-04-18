@@ -12,20 +12,64 @@ function getSession(id) {
 
 function setSession(id, data) {
   sessions.set(id, data);
+  // Also persist to Supabase immediately
+  supabase.from('candidates').upsert({
+    session_id: data.session_id,
+    name: data.name,
+    department: data.department,
+    position: data.position,
+    hierarchy_level: data.hierarchyLevel,
+    session_data: data
+  }).then(({ error }) => {
+    if (error) console.error('[Supabase] setSession error:', error.message);
+  });
 }
 
 function updateSession(id, updates) {
   const existing = sessions.get(id);
   if (!existing) return false;
-  sessions.set(id, { ...existing, ...updates });
+  const updated = { ...existing, ...updates };
+  sessions.set(id, updated);
+  // Persist updates to Supabase
+  supabase.from('candidates').upsert({
+    session_id: id,
+    name: updated.name,
+    department: updated.department,
+    position: updated.position,
+    hierarchy_level: updated.hierarchyLevel,
+    session_data: updated
+  }).then(({ error }) => {
+    if (error) console.error('[Supabase] updateSession error:', error.message);
+  });
   return true;
+}
+
+async function getSessionWithFallback(id) {
+  // Try memory first
+  const memSession = sessions.get(id);
+  if (memSession) return memSession;
+
+  // Fall back to Supabase
+  try {
+    const { data, error } = await supabase
+      .from('candidates')
+      .select('session_data')
+      .eq('session_id', id)
+      .single();
+    if (error || !data?.session_data) return null;
+    // Restore to memory
+    sessions.set(id, data.session_data);
+    return data.session_data;
+  } catch (err) {
+    console.error('[Supabase] getSessionWithFallback error:', err.message);
+    return null;
+  }
 }
 
 function deleteSession(id) {
   return sessions.delete(id);
 }
 
-// ─── Supabase: Adayı kaydet ──────────────────────────────────────────────────
 async function saveCandidate(sessionData) {
   try {
     const { error } = await supabase.from('candidates').upsert({
@@ -33,7 +77,8 @@ async function saveCandidate(sessionData) {
       name: sessionData.name,
       department: sessionData.department,
       position: sessionData.position,
-      hierarchy_level: sessionData.hierarchyLevel
+      hierarchy_level: sessionData.hierarchyLevel,
+      session_data: sessionData
     });
     if (error) console.error('[Supabase] saveCandidate error:', error.message);
   } catch (err) {
@@ -41,7 +86,6 @@ async function saveCandidate(sessionData) {
   }
 }
 
-// ─── Supabase: Sonuçları kaydet ──────────────────────────────────────────────
 async function saveResults(session_id, results) {
   try {
     const scores = [];
@@ -74,7 +118,6 @@ async function saveResults(session_id, results) {
   }
 }
 
-// ─── Supabase: Tüm adayları getir ───────────────────────────────────────────
 async function getAllCandidates() {
   try {
     const { data, error } = await supabase
@@ -92,5 +135,6 @@ async function getAllCandidates() {
 module.exports = {
   createSession, getSession, setSession,
   updateSession, deleteSession,
+  getSessionWithFallback,
   saveCandidate, saveResults, getAllCandidates
 };
