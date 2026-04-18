@@ -88,28 +88,45 @@ async function saveCandidate(sessionData) {
 
 async function saveResults(session_id, results) {
   try {
-    const scores = [];
-    if (results.iceBreakerResult) scores.push(20);
-    if (results.scenarioResult) scores.push(20);
-    if (results.audioResult) scores.push(results.audioResult.overallScore || 0);
-    if (results.intrayResult) scores.push(results.intrayResult.percentage || 0);
+    const icebreakerScore = results.iceBreakerResult?.totalScore || 
+                            results.iceBreakerResult?.score || 0;
+    const scenarioScore = results.scenarioResult?.score || 
+                          results.scenarioResult?.overallScore || 0;
+    const audioScore = results.audioResult?.overallScore || 
+                       results.audioResult?.evaluation?.overallScore || 0;
+    const intrayScore = results.intrayResult?.percentage || 
+                        results.intrayResult?.totalScore || 0;
+
+    const scores = [icebreakerScore, scenarioScore, audioScore, intrayScore].filter(s => s > 0);
     const overallScore = scores.length > 0
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : 0;
-    const grade = overallScore >= 90 ? 'A' : overallScore >= 80 ? 'B+' :
-      overallScore >= 70 ? 'B' : overallScore >= 60 ? 'C+' : 'C';
+
+    const grade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' :
+      overallScore >= 70 ? 'B+' : overallScore >= 60 ? 'B' :
+      overallScore >= 50 ? 'C+' : 'C';
+
+    const aiSummary = results.audioResult?.aiAnalysis?.summary || null;
+    const leadershipProfile = results.audioResult?.aiAnalysis?.leadershipProfile || null;
 
     const { error } = await supabase.from('assessment_results').upsert({
       session_id,
       icebreaker_result: results.iceBreakerResult || null,
-      scenario: results.scenario || null,
-      scenario_report: results.scenarioResult?.report || null,
+      icebreaker_score: icebreakerScore,
+      scenario: results.scenarioResult?.scenario || null,
+      scenario_result: results.scenarioResult || null,
+      scenario_score: scenarioScore,
       audio_result: results.audioResult || null,
+      audio_score: audioScore,
       intray_result: results.intrayResult || null,
+      intray_score: intrayScore,
       overall_score: overallScore,
       grade,
+      ai_summary: aiSummary,
+      leadership_profile: leadershipProfile,
       completed_at: new Date().toISOString()
     });
+
     if (error) console.error('[Supabase] saveResults error:', error.message);
     return { overallScore, grade };
   } catch (err) {
