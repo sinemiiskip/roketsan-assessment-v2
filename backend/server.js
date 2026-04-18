@@ -7,9 +7,14 @@ const app = express();
 app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 
-// ── CORS — absolute first, catches everything including rate limit responses
+// ── CORS — must be absolute first
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
@@ -18,18 +23,29 @@ app.use((req, res, next) => {
 });
 
 // ── Security headers
-app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false,
+}));
 
 // ── Rate limiting
 const generalLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 60,
+  windowMs: 60 * 1000,
+  max: 60,
   message: { error: 'Çok fazla istek.' },
-  skip: (req) => req.method === 'OPTIONS'
+  skip: (req) => req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
+
 const aiLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 15,
+  windowMs: 60 * 1000,
+  max: 15,
   message: { error: 'AI isteği limiti aşıldı.' },
-  skip: (req) => req.method === 'OPTIONS'
+  skip: (req) => req.method === 'OPTIONS',
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 app.use(generalLimiter);
@@ -44,9 +60,22 @@ app.use('/api', aiLimiter, require('./routes/audio'));
 app.use('/api', require('./routes/intray'));
 app.use('/api', require('./routes/candidates'));
 
-app.get('/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0.0' }));
+// ── Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '2.0.0' });
+});
 
-app.use((req, res) => res.status(404).json({ error: 'Endpoint bulunamadı' }));
-app.use((err, req, res, next) => { console.error('[ERROR]', err.message); res.status(500).json({ error: 'Sunucu hatası', detail: err.message }); });
+// ── 404
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint bulunamadı' });
+});
 
-app.listen(PORT, () => console.log('Roketsan Assessment API çalışıyor: ' + PORT));
+// ── Error handler
+app.use((err, req, res, next) => {
+  console.error('[ERROR]', err.message);
+  res.status(500).json({ error: 'Sunucu hatası', detail: err.message });
+});
+
+app.listen(PORT, () => {
+  console.log('Roketsan Assessment API çalışıyor: ' + PORT);
+});
