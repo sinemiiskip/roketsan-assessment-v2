@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { buildScenarioPrompt, loadRules, resolveDepartment } = require('../rules_engine');
+const { loadRules, resolveDepartment } = require('../rules_engine');
 const { getSessionWithFallback, updateSession } = require('../store/sessionStore');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -14,6 +14,91 @@ async function callGemini(prompt) {
   return JSON.parse(text);
 }
 
+// ── Departmana özel bağlam oluştur ────────────────────────────────
+function buildDepartmentContext(session) {
+  const dept = resolveDepartment(session.department);
+  const pos = session.position;
+
+  const contexts = {
+    'Güdüm ve Kontrol Sistemleri': {
+      realProjects: 'HİSAR hava savunma sistemi, SOM seyir füzesi, AKINCI İHA güdüm sistemi',
+      challenges: 'güdüm algoritması doğrulama, senaryo simülasyonu başarısızlığı, ihracat lisansı kısıtları',
+      stakeholders: 'SSB Program Yöneticisi, Test ve Değerlendirme Direktörü, Tedarikçi Firması',
+      kpis: 'CEP (Dairesel Hata Olasılığı), simülasyon doğruluk oranı, test başarı yüzdesi'
+    },
+    'Elektronik Sistemler': {
+      realProjects: 'AESA radar sistemleri, elektronik harp sistemleri, avionik entegrasyon',
+      challenges: 'EMI/EMC uyumluluk sorunu, bileşen tedarik kesintisi, RF performans sapması',
+      stakeholders: 'Elektronik Konfigürasyon Komitesi, Kalite Direktörü, SSB Teknik Heyet',
+      kpis: 'MTBF değeri, sistem güvenilirliği, doğrulama test kapsamı'
+    },
+    'Yazılım ve Simülasyon': {
+      realProjects: 'Gerçek zamanlı simülasyon altyapısı, gömülü yazılım, HIL test sistemleri',
+      challenges: 'yazılım gereksinimleri dondurma, kod kalite metrikleri sapması, entegrasyon hataları',
+      stakeholders: 'Yazılım Konfigürasyon Yöneticisi, Sistem Mühendisleri, Müşteri Temsilcisi',
+      kpis: 'kod kapsama oranı, yazılım hata yoğunluğu, entegrasyon test geçiş oranı'
+    },
+    'Üretim ve İmalat': {
+      realProjects: 'Seri üretim hattı kurulumu, CNC işleme optimizasyonu, kaynak kalifikasyonu',
+      challenges: 'hat duruşu, hammadde tedarik krizi, kalite reddine yol açan süreç sapması',
+      stakeholders: 'Üretim Direktörü, Kalite Güvence Müdürü, Tedarik Zinciri Müdürü',
+      kpis: 'OEE (Genel Ekipman Etkinliği), hurda oranı, zamanlama uyumu'
+    },
+    'Kalite Güvence': {
+      realProjects: 'AS9100 sertifikasyon denetimi, birinci makale denetimi, tedarikçi kalifikasyonu',
+      challenges: 'denetim bulgusu açık kalemler, NCR (uygunsuzluk raporu) yığılması, müşteri şikayeti',
+      stakeholders: 'Kalite Direktörü, Denetim Komitesi, SSB Kalite Temsilcisi',
+      kpis: 'NCR kapatma süresi, ilk geçiş oranı, tedarikçi kalite puanı'
+    },
+    'Program Yönetimi': {
+      realProjects: 'T-129 ATAK helikopter avionik entegrasyonu, HISAR-A+ geliştirme programı',
+      challenges: 'milestone kayması, bütçe aşımı, kritik kaynak çakışması, müşteri beklenti yönetimi',
+      stakeholders: 'SSB Program Direktörü, Müşteri Teknik Heyeti, CFO, İcra Komitesi',
+      kpis: 'SPI (Takvim Performans İndeksi), CPI (Maliyet Performans İndeksi), risk kapatma oranı'
+    },
+    'İş Geliştirme ve Pazarlama': {
+      realProjects: 'DSEI, Eurosatory fuarları, ihracat müzakereleri, offset anlaşmaları',
+      challenges: 'ihale takvimi sıkışması, rakip teklif analizi, müşteri ülke kısıtlamaları',
+      stakeholders: 'Genel Müdür, SSB, Savunma Bakanlığı temsilcisi, Uluslararası ortak firma',
+      kpis: 'teknik skor, teklif kazanma oranı, ihracat geliri'
+    },
+    'Tedarik Zinciri ve Lojistik': {
+      realProjects: 'kritik alt sistem tedariki, yerli ikame geliştirme, stratejik stok yönetimi',
+      challenges: 'tek kaynaklı tedarikçi riski, ihracat yasağı, hammadde fiyat artışı, teslimat gecikmesi',
+      stakeholders: 'Tedarikçi Firması, Üretim Direktörü, Hukuk Departmanı, Finans',
+      kpis: 'tedarikçi OTD oranı, stok devir hızı, alternatif kaynak sayısı'
+    },
+    'İnsan Kaynakları': {
+      realProjects: 'Kritik mühendis işe alım kampanyası, yetenek yönetimi programı, organizasyon yeniden yapılanma',
+      challenges: 'kritik pozisyon boşluğu, yüksek işten ayrılma oranı, performans yönetimi krizi',
+      stakeholders: 'Genel Müdür, Bölüm Direktörleri, Çalışan Temsilcisi',
+      kpis: 'işe alım süresi, çalışan bağlılık skoru, kritik pozisyon doluluk oranı'
+    },
+    'Finans ve Bütçe': {
+      realProjects: 'Ar-Ge bütçe planlaması, proje maliyet analizi, TÜBİTAK hibe yönetimi',
+      challenges: 'bütçe sapması, döviz kuru riski, maliyet aşımı, tahsilat gecikmesi',
+      stakeholders: 'CFO, Program Yöneticileri, SSB Mali Denetim, Bağımsız Denetçi',
+      kpis: 'bütçe varyansı, nakit akış tahmin doğruluğu, proje kârlılık marjı'
+    },
+    'Savunma Sistem Entegrasyonu': {
+      realProjects: 'HISAR sistemi platform entegrasyonu, milli muharip uçak alt sistem entegrasyonu',
+      challenges: 'arayüz uyumsuzluğu, entegrasyon testi başarısızlığı, zaman kısıtı altında doğrulama',
+      stakeholders: 'Platform Sahibi, Sistem Mühendisliği Direktörü, SSB Teknik Heyet',
+      kpis: 'entegrasyon testi geçiş oranı, arayüz uyumsuzluk sayısı, doğrulama kapsamı'
+    }
+  }
+
+  // Varsayılan bağlam
+  const defaultContext = {
+    realProjects: 'Roketsan stratejik savunma sistemleri projeleri',
+    challenges: 'teknik ve operasyonel kriz yönetimi',
+    stakeholders: 'Direktör, Müdür, SSB Temsilcisi',
+    kpis: 'proje performansı, kalite, zamanlama'
+  }
+
+  return contexts[session.department] || defaultContext
+}
+
 // ── Generate IceBreaker ────────────────────────────────────────────
 router.post('/generate-icebreaker', async (req, res) => {
   const { session_id } = req.body;
@@ -22,41 +107,48 @@ router.post('/generate-icebreaker', async (req, res) => {
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
   const rules = loadRules();
-  const dept = resolveDepartment(session.department);
-  const themes = dept?.themes?.join(', ') || 'genel mühendislik';
-  const competencies = rules.CompetencyMap.competencies.map(c => `${c.id}: ${c.name}`).join(', ');
+  const deptContext = buildDepartmentContext(session);
+  const competencies = rules.CompetencyMap.competencies.map(c => `${c.id}: ${c.name} (ağırlık: ${c.weight})`).join('\n');
 
-  const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+  const prompt = `Sen Roketsan A.Ş. için uzman bir Assessment Center değerlendirme danışmanısın.
 
-ADAY BİLGİLERİ:
+ADAY PROFİLİ:
 - Ad Soyad: ${session.name}
 - Departman: ${session.department}
 - Pozisyon: ${session.position}
 
-DEPARTMAN TEMALARI: ${themes}
-YETKİNLİKLER: ${competencies}
+DEPARTMAN BAĞLAMI:
+- Roketsan'daki Gerçek Projeler: ${deptContext.realProjects}
+- Tipik Zorluklar: ${deptContext.challenges}
+- Paydaşlar: ${deptContext.stakeholders}
+- KPI'lar: ${deptContext.kpis}
 
-GÖREV: Bu adaya özel, ${session.position} pozisyonuna uygun 4 adet ısınma sorusu üret.
-Sorular ${session.department} departmanının gerçek iş senaryolarını içermeli.
-Her soru birbirinden farklı bir liderlik boyutunu ölçmeli.
+YETKİNLİKLER:
+${competencies}
 
-KURALLAR:
-- Türkçe karakterleri doğru kullan (ş, ğ, ü, ö, ç, ı, İ)
-- Gerçekçi ve pozisyona özgü senaryolar
-- 4 seçenek, her biri farklı yetkinlik puanı
-- Sadece JSON döndür, başka hiçbir şey yazma
+GÖREV: Bu adaya ÖZEL, ${session.position} unvanının gerçek sorumluluklarını yansıtan 4 adet ısınma sorusu üret.
+
+KRİTİK KURALLAR:
+1. Her soru ${session.department} departmanının GERÇEK iş senaryolarını içermeli
+2. Sorular birbirinden TAMAMEN FARKLI liderlik boyutlarını ölçmeli
+3. ${session.position} seviyesinin yetki alanına uygun olmalı
+4. Seçenekler net ayırt edici olmalı — en iyi ile en kötü cevap açıkça belli olmalı
+5. Türkçe karakterleri doğru kullan (ş, ğ, ü, ö, ç, ı, İ)
+6. SADECE JSON döndür, başka hiçbir şey yazma
+
+SENARYO ÖRNEKLERİ: ${deptContext.challenges} konularını kullan
 
 FORMAT:
 {
   "questions": [
     {
       "id": 1,
-      "question": "Soru metni",
+      "question": "Spesifik ve gerçekçi senaryo sorusu (2-3 cümle, ${session.department} bağlamında)",
       "options": [
-        {"id": "a", "text": "Seçenek A", "competency": "LDR_01", "score": 3},
-        {"id": "b", "text": "Seçenek B", "competency": "LDR_02", "score": 2},
-        {"id": "c", "text": "Seçenek C", "competency": "LDR_03", "score": 1},
-        {"id": "d", "text": "Seçenek D", "competency": "LDR_04", "score": 0}
+        {"id": "a", "text": "En iyi liderlik davranışı (somut, ölçülebilir aksiyon)", "competency": "LDR_01", "score": 3},
+        {"id": "b", "text": "İyi ama eksik davranış", "competency": "LDR_02", "score": 2},
+        {"id": "c", "text": "Kabul edilebilir ama yetersiz davranış", "competency": "LDR_03", "score": 1},
+        {"id": "d", "text": "Liderlik açısından zayıf davranış", "competency": "LDR_04", "score": 0}
       ]
     }
   ]
@@ -79,35 +171,44 @@ router.post('/generate-content', async (req, res) => {
   const session = await getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
-  const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+  const deptContext = buildDepartmentContext(session);
 
-ADAY BİLGİLERİ:
+  const prompt = `Sen Roketsan A.Ş. için uzman bir Assessment Center değerlendirme danışmanısın. Türkiye'nin önde gelen savunma sanayii şirketi olan Roketsan'ın gerçek operasyonel bağlamını çok iyi biliyorsun.
+
+ADAY PROFİLİ:
 - Ad Soyad: ${session.name}
 - Departman: ${session.department}
 - Pozisyon: ${session.position}
 
-GÖREV: Bu adaya özel, ${session.position} pozisyonunun sorumluluklarına uygun bir kriz senaryosu üret.
-Senaryo ${session.department} departmanının gerçek operasyonel zorluklarını yansıtmalı.
-${session.position} seviyesindeki bir kişinin yetkisi ve sorumluluğu dahilinde olmalı.
+ROKETSAN DEPARTMAN BAĞLAMI:
+- Aktif Projeler: ${deptContext.realProjects}
+- Kritik Zorluk Alanları: ${deptContext.challenges}
+- Kilit Paydaşlar: ${deptContext.stakeholders}
+- Başarı Göstergeleri: ${deptContext.kpis}
 
-KURALLAR:
-- Türkçe karakterleri doğru kullan (ş, ğ, ü, ö, ç, ı, İ)
-- Gerçekçi, Roketsan'ın savunma sanayi bağlamına uygun
-- Paydaşlar pozisyona göre belirlenmeli (ast/üst ilişkisi)
-- Sadece JSON döndür
+GÖREV: ${session.name} için ÖZGÜN ve GERÇEKÇİ bir kriz senaryosu üret.
+
+KRİTİK KURALLAR:
+1. Senaryo YALNIZCA ${session.department} departmanının gerçek iş akışlarını yansıtmalı
+2. Kriz ${session.position} seviyesinin GERÇEK yetki alanında olmalı
+3. Paydaşlar pozisyona göre mantıklı ast/üst ilişkisi içinde olmalı
+4. Zaman baskısı gerçekçi ve kritik olmalı
+5. Roketsan'ın savunma sanayi bağlamı (SSB, MİLGEM, HISAR, SOM vb.) kullanılabilir
+6. Türkçe karakterleri doğru kullan
+7. SADECE JSON döndür
 
 FORMAT:
 {
-  "title": "Senaryo başlığı",
+  "title": "Kısa, çarpıcı kriz başlığı",
   "urgency": "critical",
-  "context": "Arka plan bilgisi (2-3 cümle)",
-  "crisis": "Kriz durumu detayı (3-4 cümle)",
-  "keyQuestion": "Ana soru - ${session.position} olarak ne yaparsınız?",
-  "stakeholders": ["Paydaş 1", "Paydaş 2", "Paydaş 3"],
-  "timeConstraint": "Zaman kısıtı",
+  "context": "2-3 cümle arka plan — pozisyon ve departman için özgün",
+  "crisis": "3-4 cümle kriz detayı — spesifik rakamlar, tarihler, paydaşlar içermeli",
+  "keyQuestion": "${session.position} olarak ilk 4 saatte hangi kritik kararları alırsınız ve nasıl uygularsınız?",
+  "stakeholders": ["Spesifik paydaş 1 ve unvanı", "Paydaş 2", "Paydaş 3", "Paydaş 4"],
+  "timeConstraint": "Spesifik zaman kısıtı",
   "expectedCompetencies": ["LDR_01", "LDR_02", "LDR_03"],
-  "minWords": 100,
-  "maxWords": 400
+  "minWords": 150,
+  "maxWords": 500
 }`;
 
   try {
@@ -116,7 +217,7 @@ FORMAT:
     res.json({ success: true, scenario });
   } catch (err) {
     console.error('[generate-content]', err.message);
-    const demo = getDemoScenario(session);
+    const demo = getDemoScenario(session, buildDepartmentContext(session));
     updateSession(session_id, { scenario: demo });
     res.json({ success: true, scenario: demo, demo: true });
   }
@@ -129,30 +230,34 @@ router.post('/generate-audio-case', async (req, res) => {
   const session = await getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
-  const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+  const deptContext = buildDepartmentContext(session);
 
-ADAY BİLGİLERİ:
+  const prompt = `Sen Roketsan A.Ş. için uzman bir Assessment Center değerlendirme danışmanısın.
+
+ADAY PROFİLİ:
 - Ad Soyad: ${session.name}
 - Departman: ${session.department}
 - Pozisyon: ${session.position}
 
-GÖREV: Sesli yanıt modülü için yeni ve farklı bir vaka sorusu üret.
-Bu soru senaryo modülündeki vakadan FARKLI olmalı.
-${session.position} pozisyonuna özgü bir liderlik durumu içermeli.
-Aday bu soruya 2-4 dakika sesli yanıt verecek.
+DEPARTMAN BAĞLAMI: ${deptContext.realProjects} | ${deptContext.challenges}
 
-KURALLAR:
-- Türkçe karakterleri doğru kullan
-- Tek bir açık uçlu soru olmalı
-- Sadece JSON döndür
+GÖREV: Sesli yanıt için ÖZGÜN bir liderlik vakası üret. Bu vaka senaryo modülündekinden TAMAMEN FARKLI bir konu ve bağlam içermeli.
+
+KRİTİK KURALLAR:
+1. Vaka ${session.department} gerçeğini yansıtmalı ama senaryo modülüyle çakışmamalı
+2. Aday 2-4 dakika içinde kapsamlı yanıt verebilmeli
+3. Soru açık uçlu ve çok boyutlu olmalı
+4. Liderlik tarzı, ekip yönetimi, etik karar verme gibi boyutları ölçmeli
+5. Türkçe karakterleri doğru kullan
+6. SADECE JSON döndür
 
 FORMAT:
 {
   "caseTitle": "Vaka başlığı",
-  "caseDescription": "Kısa vaka açıklaması (2-3 cümle)",
-  "question": "Siz ${session.position} olarak bu durumda ne yaparsınız ve neden?",
-  "context": "Ek bağlam bilgisi",
-  "evaluationFocus": ["Değerlendirilecek boyut 1", "Boyut 2"]
+  "caseDescription": "2-3 cümle vaka bağlamı — ${session.department} departmanına özgün",
+  "question": "${session.position} olarak bu durumda nasıl bir liderlik yaklaşımı sergilersiniz? Kararlarınızın arkasındaki mantığı ve uygulama adımlarını açıklayınız.",
+  "context": "Ek bağlam ve kısıtlar",
+  "evaluationFocus": ["Ölçülen boyut 1", "Boyut 2", "Boyut 3"]
 }`;
 
   try {
@@ -172,42 +277,49 @@ router.post('/generate-intray', async (req, res) => {
   const session = await getSessionWithFallback(session_id);
   if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
 
-  const dept = resolveDepartment(session.department);
-  const themes = dept?.themes?.join(', ') || 'genel';
+  const deptContext = buildDepartmentContext(session);
 
-  const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+  const prompt = `Sen Roketsan A.Ş. için uzman bir Assessment Center değerlendirme danışmanısın.
 
-ADAY BİLGİLERİ:
+ADAY PROFİLİ:
 - Ad Soyad: ${session.name}
 - Departman: ${session.department}
 - Pozisyon: ${session.position}
 
-GÖREV: Bu adaya özel 8 adet gerçekçi iş e-postası üret.
-E-postalar ${session.position} pozisyonunun gerçek iş tanımına ve sorumluluklarına uygun olmalı.
-Gönderenler ${session.position} için mantıklı ast/üst/yan birim ilişkilerini yansıtmalı.
-Departman bağlamı: ${themes}
+DEPARTMAN BAĞLAMI:
+- Projeler: ${deptContext.realProjects}
+- Tipik Zorluklar: ${deptContext.challenges}
+- Paydaşlar: ${deptContext.stakeholders}
 
-DAĞILIM: 2xQ1(20pt acil+önemli), 2xQ2(15pt önemli+acil değil), 2xQ3(10pt acil+önemsiz), 2xQ4(5pt acil değil+önemsiz)
+GÖREV: Bu adaya ÖZEL 8 adet gerçekçi iş e-postası üret.
 
-KURALLAR:
-- Türkçe karakterleri doğru kullan (ş, ğ, ü, ö, ç, ı, İ)
-- Her e-posta ${session.department} departmanına özgü olmalı
-- Gönderenler gerçekçi Türk isimleri ve unvanları olmalı
-- E-posta içerikleri 2-3 cümle
-- Sadece JSON döndür
+KRİTİK KURALLAR:
+1. Her e-posta ${session.department} departmanının GERÇEK iş akışlarını yansıtmalı
+2. Gönderenler ${session.position} için mantıklı hiyerarşik ilişkiler içinde olmalı (ast/üst/yan birim)
+3. E-posta konuları birbirinden TAMAMEN FARKLI olmalı
+4. Her e-postanın neden o kadranda olduğu AÇIK olmalı
+5. Gerçekçi Türk isimleri ve unvanları kullan
+6. Türkçe karakterleri doğru kullan (ş, ğ, ü, ö, ç, ı, İ)
+7. SADECE JSON döndür
+
+DAĞILIM (kesinlikle uy):
+- 2 adet Q1 (ACİL + ÖNEMLİ): 20 puan — operasyonel kriz, üst yönetim talebi
+- 2 adet Q2 (ÖNEMLİ + ACİL DEĞİL): 15 puan — stratejik planlama, gelişim aktiviteleri
+- 2 adet Q3 (ACİL + ÖNEMSİZ): 10 puan — rutin onay, koordinasyon
+- 2 adet Q4 (ACİL DEĞİL + ÖNEMSİZ): 5 puan — bilgi amaçlı, sosyal
 
 FORMAT:
 {
   "emails": [
     {
       "id": "email_1",
-      "from": "Ad Soyad - Unvan",
-      "subject": "Konu başlığı",
-      "body": "E-posta içeriği 2-3 cümle.",
+      "from": "Ad Soyad — Unvan (${session.department} bağlamına uygun)",
+      "subject": "Spesifik ve gerçekçi konu başlığı",
+      "body": "E-posta içeriği — 2-3 cümle, somut bilgi içermeli.",
       "time": "08:30",
       "correctQuadrant": "Q1",
       "points": 20,
-      "explanation": "Neden bu kadranda olduğunun açıklaması"
+      "explanation": "Neden bu kadranda: spesifik gerekçe"
     }
   ]
 }`;
@@ -218,33 +330,33 @@ FORMAT:
     res.json({ success: true, emails: data.emails });
   } catch (err) {
     console.error('[generate-intray]', err.message);
-    res.json({ success: true, emails: getFallbackEmails(session), demo: true });
+    res.json({ success: true, emails: getFallbackEmails(session, deptContext), demo: true });
   }
 });
 
 // ── Fallback functions ─────────────────────────────────────────────
-function getDemoScenario(session) {
+function getDemoScenario(session, ctx) {
   return {
-    title: `${session.department} Departmanı — Kritik Tedarik Krizi`,
+    title: `${session.department} — Kritik Operasyonel Kriz`,
     urgency: 'critical',
-    context: `Roketsan güdüm sistemi projesinde tedarikçi teslimatı durdurdu. ${session.position} olarak durumu yönetmeniz gerekiyor.`,
-    crisis: `${session.name}, üretim hattı 48 saat içinde duracak. DSB toplantısı 72 saat sonra yapılacak ve proje durumu raporlanacak.`,
-    keyQuestion: `${session.position} olarak ilk 4 saatte hangi stratejik adımları atarsınız?`,
-    stakeholders: ['Tedarik Zinciri Müdürü', 'Üretim Müdürü', 'Proje Yöneticisi'],
-    timeConstraint: '48 saat içinde üretim hattı durma riski',
-    expectedCompetencies: ['LDR_01', 'LDR_02'],
-    minWords: 100,
-    maxWords: 400
+    context: `Roketsan ${session.department} departmanında ${ctx.realProjects} kapsamında kritik bir sorun tespit edildi. ${session.position} olarak durumu yönetmeniz gerekmektedir.`,
+    crisis: `${session.name}, ${ctx.challenges} konusunda acil müdahale gerekiyor. ${ctx.stakeholders} ile koordineli hareket edilmesi şart. Süreç ${ctx.kpis} metriklerini doğrudan etkilemektedir.`,
+    keyQuestion: `${session.position} olarak ilk 4 saatte hangi kritik kararları alırsınız?`,
+    stakeholders: ctx.stakeholders.split(', '),
+    timeConstraint: '24 saat içinde aksiyon planı sunulmalı',
+    expectedCompetencies: ['LDR_01', 'LDR_02', 'LDR_03'],
+    minWords: 150,
+    maxWords: 500
   };
 }
 
 function getFallbackAudioCase(session) {
   return {
-    caseTitle: 'Ekip Çatışması Yönetimi',
-    caseDescription: `${session.department} departmanında iki kıdemli çalışan arasında proje önceliklendirmesi konusunda ciddi bir anlaşmazlık yaşanıyor. Her ikisi de haklı gerekçelere sahip ancak süreç tıkandı.`,
-    question: `Siz ${session.position} olarak bu çatışmayı nasıl yönetirsiniz ve ekibi nasıl yeniden aynı hedefe odaklarsınız?`,
-    context: 'Proje teslim tarihi 3 hafta sonra. Her iki çalışan da kritik roller üstleniyor.',
-    evaluationFocus: ['Çatışma yönetimi', 'Liderlik tarzı', 'İletişim becerisi']
+    caseTitle: 'Çapraz Fonksiyonel Ekip Çatışması',
+    caseDescription: `${session.department} departmanında iki kritik proje aynı anda son aşamaya geldi. Kaynaklar yetersiz ve her iki proje yöneticisi öncelik talep ediyor.`,
+    question: `${session.position} olarak bu kaynak çatışmasını nasıl yönetirsiniz? Kararınızın arkasındaki mantığı ve uygulama adımlarını açıklayınız.`,
+    context: 'Her iki projenin müşteriye taahhüt edilmiş teslim tarihleri var. Gecikme durumunda cezai şart devreye girecek.',
+    evaluationFocus: ['Önceliklendirme ve karar verme', 'Paydaş yönetimi', 'Kaynak optimizasyonu', 'Liderlik tarzı']
   };
 }
 
@@ -252,57 +364,129 @@ function getFallbackQuestions(session) {
   return [
     {
       id: 1,
-      question: `${session.department} departmanında kritik bir proje gecikmesi yaşandı. ${session.position} olarak ilk tepkiniz ne olur?`,
+      question: `${session.department} departmanında kritik bir proje ${session.position} bilgisi olmadan müşteriye teslim edildi ve hatalı çıktı içeriyor. Durumdan 2 saat önce haberdar oldunuz. Ne yaparsınız?`,
       options: [
-        { id: 'a', text: 'Ekibi toplayıp durum değerlendirmesi yaparım ve aksiyon planı oluştururum.', competency: 'LDR_01', score: 3 },
-        { id: 'b', text: 'Üst yönetime derhal bilgi veririm ve onay beklerim.', competency: 'LDR_03', score: 1 },
-        { id: 'c', text: 'Sorumlu kişiyi belirleyip hesap sorarım.', competency: 'LDR_02', score: 0 },
-        { id: 'd', text: 'Kök neden analizi yaparak kalıcı çözüm üretirim.', competency: 'LDR_01', score: 2 }
+        { id: 'a', text: 'Müşteriyi derhal arayarak durumu şeffaf şekilde açıklar, özür diler ve 24 saat içinde düzeltici aksiyon planı sunarım.', competency: 'LDR_04', score: 3 },
+        { id: 'b', text: 'Önce ekiple acil toplantı yapıp hatanın boyutunu anlar, sonra müşteriyle iletişime geçerim.', competency: 'LDR_01', score: 2 },
+        { id: 'c', text: 'Sorumlu kişiyi tespit edip hesap sorar, sonra durumu üst yönetime bildiririm.', competency: 'LDR_02', score: 1 },
+        { id: 'd', text: 'Müşterinin fark etmesini bekler, sonra duruma göre hareket ederim.', competency: 'LDR_03', score: 0 }
       ]
     },
     {
       id: 2,
-      question: 'İki kritik proje aynı anda son aşamaya geldi, kaynak yetersiz. Ne yaparsınız?',
+      question: `${session.department} biriminizde en kıdemli mühendis istifa kararını bildirdi. Bu kişi kritik bir projenin tek teknik yetkilisi. Projenin teslim tarihi 3 ay sonra. İlk aksiyonunuz ne olur?`,
       options: [
-        { id: 'a', text: 'Stratejik öneme göre önceliklendirip kaynakları yönlendiririm.', competency: 'LDR_01', score: 3 },
-        { id: 'b', text: 'Her iki projeye eşit kaynak ayırırım.', competency: 'LDR_02', score: 1 },
-        { id: 'c', text: 'Ekiple birlikte karar veririm.', competency: 'LDR_03', score: 2 },
-        { id: 'd', text: 'Müdürden yönlendirme isterim.', competency: 'LDR_04', score: 0 }
+        { id: 'a', text: 'Kişiyle birebir görüşüp istifa nedenini anlar, mümkünse çözüm ararım; paralelde bilgi aktarım planı ve yedekleme stratejisi oluştururum.', competency: 'LDR_03', score: 3 },
+        { id: 'b', text: 'İK ile koordineli olarak acil işe alım süreci başlatır, mevcut ekiple proje risklerini değerlendiririm.', competency: 'LDR_01', score: 2 },
+        { id: 'c', text: 'Durumu yönetime bildirerek onlardan yönlendirme isterim.', competency: 'LDR_02', score: 1 },
+        { id: 'd', text: 'Projeyi dondurup yeni kaynak gelene kadar beklerim.', competency: 'LDR_04', score: 0 }
       ]
     },
     {
       id: 3,
-      question: 'Ekibiniz yüksek riskli ama yenilikçi bir fikir önerdi. Tutumunuz?',
+      question: `SSB heyeti yarın ${session.department} departmanını denetleyecek. Ancak dün akşam kritik bir teknik sorun tespit ettiniz — rapor edilmezse denetim geçer, edilirse proje gecikmesi kaçınılmaz. Ne yaparsınız?`,
       options: [
-        { id: 'a', text: 'Mevcut prosedürlere bağlı kalırım, risk almam.', competency: 'LDR_04', score: 0 },
-        { id: 'b', text: 'Risk analizi yapıp desteklerim, gerekli önlemleri alırım.', competency: 'LDR_01', score: 3 },
-        { id: 'c', text: 'Üst yönetime ileterek onay beklerim.', competency: 'LDR_03', score: 1 },
-        { id: 'd', text: 'Küçük ölçekli pilot uygulama öneririm.', competency: 'LDR_02', score: 2 }
+        { id: 'a', text: 'Sorunu bugün gece yarısına kadar dokümante eder, sabah erken SSB ekibini bilgilendirerek çözüm planımı sunarım. Şeffaflıktan taviz vermem.', competency: 'LDR_04', score: 3 },
+        { id: 'b', text: 'Üst yönetimle acil görüşüp kararı birlikte alırız; her koşulda etik çizgimizi koruruz.', competency: 'LDR_01', score: 2 },
+        { id: 'c', text: 'Denetim sonrası sorunu raporlarım, denetimden çıkınca zaten çözüme odaklanabiliriz.', competency: 'LDR_02', score: 1 },
+        { id: 'd', text: 'Sorunun görünür olmadığını düşünerek denetimin geçmesini beklerim.', competency: 'LDR_03', score: 0 }
       ]
     },
     {
       id: 4,
-      question: 'Önemli bir müşteri toplantısında ekibiniz kritik bir hata yaptı. Ne yaparsınız?',
+      question: `${session.department} ekibiniz son 3 aydır aşırı mesai yapıyor ve motivasyon belirgin şekilde düştü. Bir çalışan burnout geçirdiğini belirtti. Proje baskısı devam ediyor. Nasıl yaklaşırsınız?`,
       options: [
-        { id: 'a', text: 'Sorumlu çalışanı toplantıda uyarırım.', competency: 'LDR_03', score: 0 },
-        { id: 'b', text: 'Hatayı sahiplenirim, özür diler ve telafi planı sunarım.', competency: 'LDR_04', score: 3 },
-        { id: 'c', text: 'Toplantıyı kısa keserim.', competency: 'LDR_02', score: 0 },
-        { id: 'd', text: 'Durumu yönetir, sonrasında ekiple değerlendirme yaparım.', competency: 'LDR_01', score: 2 }
+        { id: 'a', text: 'Ekiple bireysel görüşmeler yaparak durumu dinler, iş yükünü yeniden dengelerim. Gerekirse proje paydaşlarına takvim revizesi öneririm — insan sağlığı önceliktir.', competency: 'LDR_03', score: 3 },
+        { id: 'b', text: 'Kritik görevleri önceliklendirerek bazı işleri erteler veya dış kaynak kullanırım.', competency: 'LDR_01', score: 2 },
+        { id: 'c', text: 'Ekibe motivasyonel konuşma yapar, proje bitmeden sonra izin vereceğimi söylerim.', competency: 'LDR_02', score: 1 },
+        { id: 'd', text: 'Bu dönem kritik, proje bitene kadar devam etmelerini beklerim.', competency: 'LDR_04', score: 0 }
       ]
     }
   ];
 }
 
-function getFallbackEmails(session) {
+function getFallbackEmails(session, ctx) {
   return [
-    { id: 'email_1', from: 'Genel Müdür - Ahmet Kaya', subject: 'ACİL: SSB Heyeti Sunumu', body: 'Yarın sabah SSB heyeti geliyor. Proje durum raporu eksik, bu gece hazırlanmalı. Sizden destek bekliyorum.', time: '07:30', correctQuadrant: 'Q1', points: 20, explanation: 'Stratejik paydaş, kurumsal risk taşıyor, hemen ele alınmalı.' },
-    { id: 'email_2', from: 'Proje Yöneticisi - Elif Şahin', subject: 'ACİL: Üretim Hattı Durma Riski', body: 'Kritik bileşen tedarikçisi teslimatı durdurdu. 48 saat içinde hat duracak. Acil karar gerekiyor.', time: '08:15', correctQuadrant: 'Q1', points: 20, explanation: 'Operasyonel kriz, hemen müdahale gerekiyor.' },
-    { id: 'email_3', from: 'İK Müdürü - Murat Demir', subject: 'Yetkinlik Gelişim Planı Revizyonu', body: 'Ekibinizin gelişim planını önümüzdeki ay başına kadar onaylamanızı rica ediyorum. Taslak ekte.', time: '09:00', correctQuadrant: 'Q2', points: 15, explanation: 'Önemli ama acil değil, planlanmalı.' },
-    { id: 'email_4', from: 'Strateji Direktörü - Ayşe Yıldız', subject: '2026-2030 Ar-Ge Yol Haritası', body: 'Uzun vadeli Ar-Ge stratejimizin taslağını hazırladım, görüşlerinizi almak istiyorum. Toplantı ayarlayalım mı?', time: '10:30', correctQuadrant: 'Q2', points: 15, explanation: 'Stratejik öneme sahip, planlanarak ele alınmalı.' },
-    { id: 'email_5', from: 'Sekreterya - Fatma Çelik', subject: 'Toplantı Odası Rezervasyonu', body: 'Perşembe toplantısı için oda rezervasyonu yapılması gerekiyor. Onayınızı alabilir miyim?', time: '11:00', correctQuadrant: 'Q3', points: 10, explanation: 'Delege edilebilir rutin işlem.' },
-    { id: 'email_6', from: 'Satın Alma - Kemal Arslan', subject: 'Ofis Malzemeleri Onayı', body: 'Aylık ofis malzemeleri siparişi için onayınız gerekiyor. Toplam 2.300 TL tutarında.', time: '11:45', correctQuadrant: 'Q3', points: 10, explanation: 'Rutin, başkasına devredilebilir.' },
-    { id: 'email_7', from: 'Sosyal Kulüp - Zeynep Koç', subject: 'Yıl Sonu Yemeği Oylaması', body: 'Bu yılki yıl sonu yemeği için tarih ve mekan oylaması başladı. Oy kullanmayı unutmayın!', time: '12:30', correctQuadrant: 'Q4', points: 5, explanation: 'Ne acil ne önemli, boş vakitte bakılabilir.' },
-    { id: 'email_8', from: 'Dış Kaynak - Haber Bülteni', subject: 'Haftalık Savunma Sanayii Haberleri', body: 'Bu haftanın savunma sanayii haber özeti ektedir. İyi okumalar.', time: '13:00', correctQuadrant: 'Q4', points: 5, explanation: 'Rutin bilgi bülteni, öncelik gerektirmiyor.' }
+    {
+      id: 'email_1',
+      from: `Ahmet Kaya — ${session.department} Direktörü`,
+      subject: `ACİL: SSB Teknik Heyet Toplantısı — Yarın 09:00`,
+      body: `SSB'den yarın sabah 09:00'da teknik heyet ziyareti var. ${ctx.realProjects} kapsamındaki son ilerleme raporunu bugün 18:00'e kadar hazırlamanızı bekliyorum. Detaylar ekte.`,
+      time: '07:15',
+      correctQuadrant: 'Q1',
+      points: 20,
+      explanation: 'SSB ziyareti kurumsal öncelik, Direktör talebi, 18:00 deadline — hem acil hem çok önemli.'
+    },
+    {
+      id: 'email_2',
+      from: `Elif Şahin — Tedarik Zinciri Müdürü`,
+      subject: 'ACİL: Kritik Bileşen Teslimatı Durdu — Hat Riski',
+      body: `${ctx.realProjects} için gereken kritik bileşenin tedarikçisi ihracat lisansı askıya alındığı gerekçesiyle teslimatı durdurdu. Stokta 48 saatlik malzeme var. Acil karar gerekiyor.`,
+      time: '08:30',
+      correctQuadrant: 'Q1',
+      points: 20,
+      explanation: 'Üretim hattı durma riski, 48 saat kritik pencere — hem acil hem çok önemli.'
+    },
+    {
+      id: 'email_3',
+      from: `Murat Demir — İnsan Kaynakları Müdürü`,
+      subject: `${session.department} Yetkinlik Gelişim Planı — Q3 Revizyon`,
+      body: `Ekibinizin 2024 yetkinlik gelişim planını bir sonraki dönem için revize etmemiz gerekiyor. Bireysel gelişim hedeflerini de içeren taslağı önümüzdeki ay sonuna kadar onaylamanızı rica ediyorum.`,
+      time: '09:15',
+      correctQuadrant: 'Q2',
+      points: 15,
+      explanation: 'Ekip gelişimi stratejik önem taşır ancak acil değil — planlanarak ele alınmalı.'
+    },
+    {
+      id: 'email_4',
+      from: `Zeynep Arslan — Strateji ve Planlama Direktörü`,
+      subject: `2025-2030 Teknoloji Yol Haritası — Girdi Talebi`,
+      body: `${session.department} biriminin önümüzdeki 5 yıllık teknolojik önceliklerini ve yatırım ihtiyaçlarını içeren girdileri strateji belgesi için bekliyorum. 3 hafta sonraki Yönetim Kurulu sunumuna dahil edilecek.`,
+      time: '10:00',
+      correctQuadrant: 'Q2',
+      points: 15,
+      explanation: 'YK\'ya gidecek stratejik doküman — önemli ama 3 hafta süresi var, planlanabilir.'
+    },
+    {
+      id: 'email_5',
+      from: `Fatma Çelik — Departman Sekreteri`,
+      subject: 'Aylık Departman Toplantısı — Oda Rezervasyonu Onayı',
+      body: `Perşembe günkü aylık departman toplantısı için Toplantı Odası B rezervasyonu yapılacak. Saat 14:00-16:00 uygun mu? Onayınızı alabilir miyim?`,
+      time: '10:45',
+      correctQuadrant: 'Q3',
+      points: 10,
+      explanation: 'Rutin koordinasyon — acil görünse de önem düşük, asistana devredilebilir.'
+    },
+    {
+      id: 'email_6',
+      from: `Kemal Yıldız — Satın Alma Uzmanı`,
+      subject: 'Ofis Malzemeleri Siparişi — Müdür Onayı Gerekiyor',
+      body: `${session.department} birimi için aylık ofis malzemeleri siparişini onaylamanız gerekiyor. Toplam tutar 3.750 TL. Tedarikçi listesi ve fiyat karşılaştırması ekte mevcut.`,
+      time: '11:30',
+      correctQuadrant: 'Q3',
+      points: 10,
+      explanation: 'Rutin satın alma onayı — devredilebilir, önem düzeyi düşük.'
+    },
+    {
+      id: 'email_7',
+      from: `Roketsan Sosyal Kulüp`,
+      subject: 'Yıllık Piknik Organizasyonu — Tarih Anketi',
+      body: `Bu yılki yıllık piknik için tarih belirleme anketimiz başladı. Tercih ettiğiniz tarihi belirtmek için aşağıdaki bağlantıya tıklayabilirsiniz. Katılım gönüllülük esasına dayanmaktadır.`,
+      time: '12:00',
+      correctQuadrant: 'Q4',
+      points: 5,
+      explanation: 'Sosyal etkinlik anketi — ne acil ne önemli, boş vakitte bakılabilir.'
+    },
+    {
+      id: 'email_8',
+      from: `Savunma Sanayii Bülteni`,
+      subject: 'Haftalık Sektör Özeti — Uluslararası Savunma Haberleri',
+      body: `Bu haftanın uluslararası savunma sanayii gelişmeleri: DSEI fuarı haberleri, NATO tedarik politikaları ve sektördeki teknoloji trendleri özetlenmiştir. Detaylı okuma için ekte PDF bulunmaktadır.`,
+      time: '13:00',
+      correctQuadrant: 'Q4',
+      points: 5,
+      explanation: 'Haftalık bilgi bülteni — rutin bilgilendirme, öncelik gerektirmiyor.'
+    }
   ];
 }
 

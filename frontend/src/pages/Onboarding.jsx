@@ -4,8 +4,65 @@ import axios from 'axios'
 import { useAssessmentStore } from '../store/assessmentStore'
 import RoketsanLogo from '../components/RoketsanLogo'
 
-const DEPARTMENTS = ['Mühendislik', 'Ar-Ge', 'Üretim', 'Kalite', 'İnsan Kaynakları', 'Satın Alma', 'Savunma Sistemleri', 'Yazılım']
-const POSITIONS = ['Mühendis', 'Kıdemli Mühendis', 'Uzman', 'Kıdemli Uzman', 'Takım Lideri', 'Proje Yöneticisi', 'Müdür', 'Direktör']
+// Roketsan A.Ş. gerçek organizasyon yapısına göre
+const DEPARTMENT_POSITION_MAP = {
+  'Güdüm ve Kontrol Sistemleri': [
+    'Sistem Mühendisi', 'Kıdemli Sistem Mühendisi', 'Baş Mühendis',
+    'Ar-Ge Uzmanı', 'Kıdemli Ar-Ge Uzmanı', 'Teknik Lider',
+    'Grup Müdürü', 'Direktör'
+  ],
+  'Elektronik Sistemler': [
+    'Elektronik Tasarım Mühendisi', 'Kıdemli Elektronik Mühendisi',
+    'Devre Tasarım Uzmanı', 'Teknik Lider', 'Grup Müdürü', 'Direktör'
+  ],
+  'Yazılım ve Simülasyon': [
+    'Yazılım Mühendisi', 'Kıdemli Yazılım Mühendisi', 'Gömülü Sistem Uzmanı',
+    'Simülasyon Uzmanı', 'Yazılım Mimarı', 'Teknik Lider', 'Grup Müdürü'
+  ],
+  'Mekanik Tasarım ve Yapı': [
+    'Mekanik Tasarım Mühendisi', 'Kıdemli Mekanik Mühendis',
+    'Malzeme Uzmanı', 'Yapısal Analiz Uzmanı', 'Teknik Lider', 'Grup Müdürü'
+  ],
+  'Üretim ve İmalat': [
+    'Üretim Mühendisi', 'Kıdemli Üretim Mühendisi', 'Proses Uzmanı',
+    'Üretim Planlama Uzmanı', 'Atölye Şefi', 'Üretim Müdürü', 'Direktör'
+  ],
+  'Kalite Güvence': [
+    'Kalite Güvence Mühendisi', 'Kıdemli Kalite Mühendisi',
+    'Kalite Sistem Uzmanı', 'Denetim Uzmanı', 'Kalite Müdürü'
+  ],
+  'Program Yönetimi': [
+    'Program Yöneticisi', 'Kıdemli Program Yöneticisi',
+    'Proje Koordinatörü', 'Risk Yönetimi Uzmanı',
+    'Program Direktörü', 'Genel Müdür Yardımcısı'
+  ],
+  'İş Geliştirme ve Pazarlama': [
+    'İş Geliştirme Uzmanı', 'Kıdemli İş Geliştirme Uzmanı',
+    'Teklif Yönetimi Uzmanı', 'İhracat Uzmanı',
+    'İş Geliştirme Müdürü', 'Direktör'
+  ],
+  'Tedarik Zinciri ve Lojistik': [
+    'Tedarik Zinciri Uzmanı', 'Satın Alma Uzmanı', 'Kıdemli Satın Alma Uzmanı',
+    'Lojistik Uzmanı', 'Tedarikçi Geliştirme Uzmanı',
+    'Tedarik Zinciri Müdürü'
+  ],
+  'İnsan Kaynakları': [
+    'İK Uzmanı', 'Kıdemli İK Uzmanı', 'Yetenek Yönetimi Uzmanı',
+    'Organizasyonel Gelişim Uzmanı', 'İK Müdürü', 'İK Direktörü'
+  ],
+  'Finans ve Bütçe': [
+    'Finansal Analiz Uzmanı', 'Kıdemli Finans Uzmanı',
+    'Bütçe Planlama Uzmanı', 'Maliyet Analiz Uzmanı',
+    'Finans Müdürü', 'CFO Yardımcısı'
+  ],
+  'Savunma Sistem Entegrasyonu': [
+    'Entegrasyon Mühendisi', 'Kıdemli Entegrasyon Mühendisi',
+    'Test ve Doğrulama Uzmanı', 'Sistem Entegrasyon Lideri',
+    'Entegrasyon Müdürü', 'Direktör'
+  ]
+}
+
+const DEPARTMENTS = Object.keys(DEPARTMENT_POSITION_MAP)
 
 export default function Onboarding() {
   const navigate = useNavigate()
@@ -13,6 +70,12 @@ export default function Onboarding() {
   const [form, setForm] = useState({ name: '', department: '', position: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const availablePositions = form.department ? DEPARTMENT_POSITION_MAP[form.department] || [] : []
+
+  function handleDepartmentChange(e) {
+    setForm({ ...form, department: e.target.value, position: '' })
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -24,10 +87,10 @@ export default function Onboarding() {
     setError('')
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/init-session`, form)
-      setSession(res.data)
+      setSession({ ...res.data, name: form.name, department: form.department, position: form.position })
       navigate('/icebreaker')
     } catch (err) {
-      setError('Bağlantı hatası. Backend çalışıyor mu?')
+      setError('Bağlantı hatası. Lütfen tekrar deneyiniz.')
     } finally {
       setLoading(false)
     }
@@ -42,7 +105,7 @@ export default function Onboarding() {
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', minHeight: '100vh' }}>
 
         {/* Left Panel */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 80px', maxWidth: 560 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 80px', maxWidth: 580 }}>
           <div className="fade-in" style={{ marginBottom: 48 }}>
             <RoketsanLogo size={36} />
           </div>
@@ -70,22 +133,51 @@ export default function Onboarding() {
               <input className="input-field" placeholder="Adınız ve soyadınız" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
+
             <div>
-              <label className="label">Departman</label>
-              <select className="input-field" value={form.department}
-                onChange={e => setForm({ ...form, department: e.target.value })}>
-                <option value="">Departman seçiniz</option>
+              <label className="label">Departman / Birim</label>
+              <select className="input-field" value={form.department} onChange={handleDepartmentChange}>
+                <option value="">Departmanınızı seçiniz</option>
                 {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
+
             <div>
-              <label className="label">Pozisyon</label>
+              <label className="label">Pozisyon / Unvan</label>
               <select className="input-field" value={form.position}
-                onChange={e => setForm({ ...form, position: e.target.value })}>
-                <option value="">Pozisyon seçiniz</option>
-                {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                onChange={e => setForm({ ...form, position: e.target.value })}
+                disabled={!form.department}>
+                <option value="">
+                  {form.department ? 'Pozisyonunuzu seçiniz' : 'Önce departman seçiniz'}
+                </option>
+                {availablePositions.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
+              {form.department && (
+                <div style={{ marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>
+                  {form.department} birimi için {availablePositions.length} pozisyon mevcut
+                </div>
+              )}
             </div>
+
+            {form.department && form.position && (
+              <div className="fade-in" style={{
+                padding: '12px 16px',
+                background: 'rgba(0,255,136,0.05)',
+                border: '1px solid var(--border-active)',
+                borderRadius: 8,
+                display: 'flex', alignItems: 'center', gap: 10
+              }}>
+                <span style={{ fontSize: 16 }}>✦</span>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-green)', letterSpacing: 1 }}>
+                    DEĞERLENDİRME PROFİLİ HAZIR
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+                    {form.position} · {form.department}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '12px 16px', color: '#ef4444', fontSize: 14 }}>
@@ -93,8 +185,10 @@ export default function Onboarding() {
               </div>
             )}
 
-            <button className="btn-primary" type="submit" disabled={loading} style={{ marginTop: 8 }}>
-              {loading ? 'Başlatılıyor...' : 'Değerlendirmeyi Başlat →'}
+            <button className="btn-primary" type="submit"
+              disabled={loading || !form.name || !form.department || !form.position}
+              style={{ marginTop: 8 }}>
+              {loading ? 'Değerlendirme Başlatılıyor...' : 'Değerlendirmeyi Başlat →'}
             </button>
 
             <div style={{ textAlign: 'center', marginTop: 8 }}>
@@ -109,7 +203,6 @@ export default function Onboarding() {
         {/* Right Panel */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: 60, borderLeft: '1px solid var(--border-dim)' }}>
           <div className="fade-in-delay-3" style={{ textAlign: 'center', maxWidth: 400 }}>
-            {/* Decorative radar */}
             <div style={{ position: 'relative', width: 300, height: 300, margin: '0 auto 48px' }}>
               {[1,2,3,4].map(i => (
                 <div key={i} style={{
@@ -131,29 +224,37 @@ export default function Onboarding() {
                 flexDirection: 'column', gap: 8
               }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--accent-green)', letterSpacing: 2, opacity: 0.7 }}>SİSTEM HAZIR</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text-primary)' }}>6 MODÜL</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color: 'var(--text-primary)' }}>4 MODÜL</div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>45-60 DAKİKA</div>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { step: '01', label: 'Isınma Soruları', desc: 'Çoktan seçmeli, kısa sorular' },
-                { step: '02', label: 'Kriz Senaryosu', desc: 'AI destekli dinamik senaryo' },
-                { step: '03', label: 'Sesli Yanıt', desc: 'Mikrofon ile liderlik analizi' },
-                { step: '04', label: 'In-Tray Egzersizi', desc: 'Eisenhower matrisi' },
+                { step: '01', label: 'Isınma Soruları', desc: 'Pozisyona özel çoktan seçmeli sorular', color: 'var(--accent-green)' },
+                { step: '02', label: 'Kriz Senaryosu', desc: 'Departmanınıza özel AI kriz vakası', color: 'var(--accent-blue)' },
+                { step: '03', label: 'Sesli Yanıt', desc: 'Türkçe NLP destekli liderlik analizi', color: '#f59e0b' },
+                { step: '04', label: 'In-Tray Egzersizi', desc: 'Gerçekçi iş e-postaları önceliklendirme', color: '#a78bfa' },
               ].map(item => (
                 <div key={item.step} style={{
                   display: 'flex', alignItems: 'center', gap: 16, padding: '12px 16px',
-                  background: 'rgba(0,255,136,0.03)', border: '1px solid var(--border-dim)', borderRadius: 8
+                  background: 'rgba(0,255,136,0.03)', border: '1px solid var(--border-dim)', borderRadius: 8,
+                  transition: 'all 0.2s'
                 }}>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--accent-green)', fontWeight: 500 }}>{item.step}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: item.color, fontWeight: 700, minWidth: 24 }}>{item.step}</span>
                   <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{item.desc}</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{item.desc}</div>
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div style={{ marginTop: 24, padding: '12px 16px', background: 'rgba(14,165,233,0.05)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 8 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--accent-blue)', letterSpacing: 2, marginBottom: 4 }}>BİLİMSEL ÇERÇEVE</div>
+              <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Bass & Avolio Dönüşümcü Liderlik · Goleman EQ Modeli · McClelland Yetkinlik Çerçevesi
+              </div>
             </div>
           </div>
         </div>
