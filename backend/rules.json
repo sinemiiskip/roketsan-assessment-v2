@@ -1,62 +1,230 @@
 {
   "CompetencyMap": {
     "description": "Roketsan Liderlik Yetkinlik Matrisi",
+    "scientificBasis": "McClelland (1973) Yetkinlik Modeli, Bass & Avolio (1994) MLQ Çerçevesi, Goleman (1995) EQ Modeli, Spencer & Spencer (1993) Davranışsal Göstergeler",
     "competencies": [
       {
         "id": "LDR_01",
         "name": "Stratejik Çeviklik ve Karar Verme",
+        "scientificConstruct": "Bilişsel Esneklik (Cognitive Flexibility) + Analitik Muhakeme (Bass, 1985)",
         "weight": 0.30,
         "maxScore": 100,
         "scoringCriteria": {
-          "90-100": "Sistematik risk analizi yapar, veriye dayalı karar verir, uzun vadeli etkileri değerlendirir, alternatif senaryolar üretir",
-          "70-89": "Genel stratejik bakış var, risk farkındалığı mevcut ancak alternatif senaryolar sınırlı",
+          "90-100": "Sistematik risk analizi yapar, veriye dayalı karar verir, uzun vadeli etkileri değerlendirir, alternatif senaryolar üretir, belirsizlik altında etkin karar alır",
+          "70-89": "Genel stratejik bakış var, risk farkındalığı mevcut ancak alternatif senaryolar sınırlı",
           "50-69": "Kısa vadeli odaklı, reaktif karar verme eğilimi, stratejik boyut zayıf",
           "0-49": "Karar vermekten kaçınır, stratejik düşünce yok, salt operasyonel odak"
         },
-        "keywords": ["vizyon", "gelecek projeksiyonu", "risk analizi", "milli teknoloji", "stratejik öncelik", "çevik yaklaşım", "pazar analizi", "rekabet avantajı", "uzun vadeli planlama", "veri odaklı", "inovasyon", "teknolojik trend", "makro bakış", "sürdürülebilirlik", "portföy yönetimi", "senaryo planlama", "sistem düşüncesi", "fırsat odaklı", "katma değer", "yerlileştirme", "savunma stratejisi", "vizyoner bakış"],
-        "negativeKeywords": ["kararsızlık", "bekle-gör", "riskten kaçınma", "statüko", "dar görüşlü", "günü kurtarma", "plansızlık", "tepkisel", "vizyonsuzluk", "analiz felci"]
+        "keywords": [
+          "vizyon", "vizyonum", "vizyonumuz", "vizyoner", "vizyona",
+          "strateji", "stratejik", "stratejim", "stratejimiz", "stratejiye", "stratejisi",
+          "analiz", "analizim", "analizimiz", "analiz ettim", "analiz ediyorum", "analiz edelim",
+          "risk", "riskler", "riskimi", "risk analizi", "riskleri değerlendirdim", "risk yönetimi",
+          "karar", "kararım", "kararımı", "kararlı", "kararlılık", "kararlaştır", "karar verdim", "karar alıyorum",
+          "plan", "planım", "planımız", "planlama", "planladım", "planlamalıyız", "planımı",
+          "gelecek", "geleceğe", "geleceğimiz", "gelecek odaklı", "uzun vade", "uzun vadeli",
+          "öncelik", "önceliklerim", "öncelikli", "önceliklendirme", "önceliklendirdim",
+          "hedef", "hedefim", "hedeflerim", "hedefimiz", "hedefe", "hedefler",
+          "veri", "veriye", "verime", "veri odaklı", "veri analizi", "verilere göre",
+          "inovasyon", "inovatif", "yenilik", "yenilikçi", "yenilikçilik",
+          "sürdürülebilir", "sürdürülebilirlik", "sürdürülebilir büyüme",
+          "rekabet", "rekabetçi", "rekabet avantajı", "rekabetçi üstünlük",
+          "senaryo", "senaryolar", "senaryo planı", "çoklu senaryo",
+          "sistem", "sistemik", "sistematik", "sistem düşüncesi", "sistemli",
+          "bütünsel", "bütünleşik", "makro", "makro bakış", "büyük resim",
+          "katma değer", "değer yaratma", "değer odaklı",
+          "yerlileştirme", "yerli", "milli teknoloji", "savunma sanayii",
+          "kök neden", "kök neden analizi", "sorunun kaynağı",
+          "etki analizi", "etkileri değerlendirdim", "sonuçlarını düşündüm",
+          "fırsat", "fırsatlar", "fırsat odaklı", "fırsatı değerlendirmeliyiz",
+          "portföy", "portföy yönetimi",
+          "kritik yol", "kritik başarı faktörü",
+          "ölçülebilir", "ölçüm", "performans göstergesi", "kpi",
+          "adaptasyon", "adapte", "uyum sağlama", "değişime uyum",
+          "öngörü", "öngörerek", "proaktif planlama", "ileriye dönük"
+        ],
+        "negativeKeywords": [
+          "kararsız", "kararsızlık", "karar veremiyorum", "karar vermek zor",
+          "bekle gör", "bekleyip görelim", "nasılsa hallolur",
+          "riskten kaçın", "risk almak istemiyorum", "riske girmeyiz",
+          "statüko", "her zaman böyle yaptık", "değiştirmek istemiyorum",
+          "dar görüşlü", "sadece kendi işime bakayım",
+          "günü kurtarma", "şimdilik idare eder",
+          "plansız", "plansızlık", "plan yapmadım",
+          "tepkisel", "sadece tepki veriyorum",
+          "vizyonsuz", "vizyonsuzluk",
+          "analiz felci", "çok düşündüm ama karar veremedim"
+        ],
+        "turkishRootForms": {
+          "description": "Kelime kökleri — bu kökü içeren tüm türevler geçerlidir",
+          "roots": ["vizyon", "strateji", "analiz", "risk", "karar", "plan", "hedef", "veri", "inovas", "sürdür", "rekabet", "sistem", "fırsat", "değer"]
+        }
       },
       {
         "id": "LDR_02",
         "name": "İnisiyatif ve Sorumluluk Alma",
+        "scientificConstruct": "Başarı Motivasyonu (McClelland, 1961) + Proaktif Kişilik (Bateman & Crant, 1993)",
         "weight": 0.25,
         "maxScore": 100,
         "scoringCriteria": {
-          "90-100": "Problemi sahiplenir, hızla aksiyon alır, çözüm üretir, sonuca kadar takip eder",
+          "90-100": "Problemi sahiplenir, hızla aksiyon alır, çözüm üretir, sonuca kadar takip eder, engelleri aşar",
           "70-89": "Genel olarak inisiyatif kullanır ancak zaman zaman onay bekler",
           "50-69": "Sorunu fark eder ama çözüm üretmek yerine haber vermeyi tercih eder",
           "0-49": "Pasif kalır, sorumluluğu başkasına yükler, harekete geçmez"
         },
-        "keywords": ["sorumluluk bende", "inisiyatif alıyorum", "çözüm odaklıyım", "aksiyon planı", "milli görev", "proaktif", "kararlılık", "sonuç odaklı", "sahiplenme", "özgüven", "hızlı karar", "cesaret", "çözüm üretme", "bitiricilik", "aktif rol"],
-        "negativeKeywords": ["topu başkasına atma", "benim işim değil", "onay bekliyorum", "pasif", "erteleme", "kaçınma", "bahaneler", "hareketsiz", "çekingen", "sorumluluktan kaçma"]
+        "keywords": [
+          "sorumluluk", "sorumluluğum", "sorumluluğumu", "sorumluluk alıyorum", "sorumluluk bende",
+          "sahiplen", "sahiplendim", "sahipleniyorum", "sahiplenmeliyiz",
+          "inisiyatif", "inisiyatif aldım", "inisiyatif alıyorum", "inisiyatif kullandım",
+          "aksiyon", "aksiyonum", "aksiyon alıyorum", "aksiyon aldım", "aksiyon planı",
+          "çözüm", "çözümüm", "çözüm ürettim", "çözüm buldum", "çözüm odaklı", "çözüm önerim",
+          "proaktif", "proaktif davrandım", "proaktif yaklaşım",
+          "kararlı", "kararlılık", "kararlıyım", "kararlı adım",
+          "sonuç", "sonuç odaklı", "sonuca ulaştım", "sonucu takip ediyorum",
+          "takip", "takip ediyorum", "takip ettim", "takipçisiyim",
+          "hemen", "derhal", "vakit kaybetmeden", "gecikmeden",
+          "ben üstlenirim", "ben hallederim", "ben alırım",
+          "bitiricilik", "sonuna kadar", "tamamlayacağım",
+          "cesaret", "cesur", "cesaretim", "cesaretle",
+          "girişim", "girişimci", "girişimcilik", "öncülük",
+          "engel", "engellere rağmen", "zorlukları aştım",
+          "azim", "azimli", "ısrar", "ısrarcı", "vazgeçmiyorum",
+          "öz motivasyon", "motivasyonum yüksek", "motive oldum",
+          "taahhüt", "taahhüt ediyorum", "söz veriyorum",
+          "hesap verebilir", "hesap verebilirlik",
+          "aktif", "aktif rol", "aktif olarak",
+          "bağımsız", "kendi başıma", "beklemeden",
+          "fark yarattım", "değişim yarattım", "öncü oldum",
+          "düzeltici", "düzeltici aksiyon", "hatayı kabul edip düzelttim",
+          "öğrendim", "deneyimledim", "geliştirdim kendimi"
+        ],
+        "negativeKeywords": [
+          "topu at", "topu başkasına attım", "benim işim değil",
+          "onay bekliyorum", "üstüm ne derse", "direktif gelmeden",
+          "pasif", "pasif kaldım", "hareketsiz",
+          "ertele", "erteledim", "sonra bakarım",
+          "kaçın", "kaçındım", "üzerime almadım",
+          "bahane", "bahaneler", "mazeretim var",
+          "çekingen", "çekiniyorum", "korktum",
+          "sorumluluktan kaçtım", "sahiplenmedim",
+          "kimse söylemedi", "bana haber verilmedi",
+          "benim kontrolümde değil", "yapamam", "beceremem"
+        ],
+        "turkishRootForms": {
+          "roots": ["sorumlul", "sahiplen", "inisiyatif", "aksiyon", "çözüm", "proaktif", "kararlı", "takip", "cesaret", "azim", "taahhüt"]
+        }
       },
       {
         "id": "LDR_03",
         "name": "Ekip Geliştirme ve İş Birliği",
+        "scientificConstruct": "Dönüşümcü Liderlik — Bireysel İlgi (Bass & Avolio, 1994) + Sosyal Zeka (Goleman, 2006)",
         "weight": 0.25,
         "maxScore": 100,
         "scoringCriteria": {
-          "90-100": "Ekibi aktif geliştirir, delegasyon yapar, çatışmayı fırsata çevirir, motivasyonu yüksek tutar",
+          "90-100": "Ekibi aktif geliştirir, delegasyon yapar, çatışmayı fırsata çevirir, motivasyonu yüksek tutar, psikolojik güvenlik ortamı yaratır",
           "70-89": "Ekip odaklı düşünür, iş birliğine açık ancak delegasyon sınırlı",
           "50-69": "Ekip farkındalığı var ama bireysel çalışmayı tercih eder",
           "0-49": "Ekibi dışlar, mikro yönetim yapar veya iletişim kurmaz"
         },
-        "keywords": ["ekip ruhu", "mentorluk", "yetkilendirme", "delegasyon", "bilgi paylaşımı", "sinerji", "koçluk", "iş birliği", "empati", "açık iletişim", "geri bildirim", "motivasyon", "çatışma yönetimi", "destekleyici", "kapsayıcı", "takdir"],
-        "negativeKeywords": ["mikro yönetim", "suçlayıcı", "iletişim kopukluğu", "ego", "dışlama", "güvensizlik", "otoriter", "bencil", "yıkıcı eleştiri", "baskıcı"]
+        "keywords": [
+          "ekip", "ekibim", "ekibimiz", "ekibe", "ekiple", "ekip ruhu", "ekip çalışması",
+          "takım", "takımım", "takımımız", "takım ruhu", "takım çalışması",
+          "birlikte", "birlikte çalışıyoruz", "birlikte karar aldık", "birlikte başardık",
+          "iş birliği", "iş birliği yapıyoruz", "iş birliğine açık",
+          "delegasyon", "delege", "delege ettim", "yetki verdim", "yetkilendirdim",
+          "mentorluk", "mentor", "mentorluk yapıyorum", "rehberlik",
+          "koçluk", "koç", "koçluk yapıyorum",
+          "empati", "empati kuruyorum", "empatik", "anlıyorum sizi",
+          "motivasyon", "motive", "motive ettim", "motivasyonu yüksek tutuyorum",
+          "geri bildirim", "geri bildirim veriyorum", "yapıcı geri bildirim",
+          "iletişim", "açık iletişim", "iletişim kuruyorum", "iletişim kanalları",
+          "güven", "güveniyorum", "güven ortamı", "güvene dayalı",
+          "gelişim", "gelişimlerine", "gelişimlerini destekliyorum", "gelişim planı",
+          "destek", "destekliyorum", "destekleyici",
+          "çatışma", "çatışma yönetimi", "çatışmayı çözdüm", "anlaşmazlığı çözdüm",
+          "uzlaşı", "uzlaştım", "ortak zemin", "ortak payda",
+          "kapsayıcı", "kapsayıcılık", "herkesi dahil ettim",
+          "takdir", "takdir ettim", "teşekkür ettim", "başarıyı kutladık",
+          "sinerji", "synerji", "birlikte daha güçlüyüz",
+          "psikolojik güvenlik", "fikirlerini rahatça söyleyebilir",
+          "çeşitlilik", "farklı bakış açıları",
+          "katılımcı", "katılımcı karar", "herkesin görüşü önemli",
+          "paylaşım", "bilgi paylaşımı", "deneyim paylaşımı",
+          "ortak hedef", "ortak vizyon", "aynı hedefe doğru",
+          "açık kapı", "her zaman ulaşabilirler"
+        ],
+        "negativeKeywords": [
+          "mikro yönetim", "her şeyi kontrol ediyorum", "kimseye güvenmiyorum",
+          "suçlayıcı", "suçladım", "hep onların hatası",
+          "iletişim yok", "konuşmuyoruz",
+          "ego", "ben her şeyi bilirim",
+          "dışla", "dışladım", "ekibe dahil etmedim",
+          "güvensizlik", "güvenmiyorum",
+          "otoriter", "otoriteyle bastırıyorum",
+          "bencil", "sadece kendi çıkarım",
+          "yıkıcı eleştiri", "aşağıladım",
+          "baskıcı", "baskı yapıyorum",
+          "tek başıma hallederim", "ekibe ihtiyacım yok"
+        ],
+        "turkishRootForms": {
+          "roots": ["ekip", "takım", "birlikte", "delegas", "mentor", "koçluk", "empati", "motivasyon", "iletişim", "güven", "gelişim", "destek", "uzlaş", "takdir"]
+        }
       },
       {
         "id": "LDR_04",
         "name": "Etik Değerler ve Kurumsal Disiplin",
+        "scientificConstruct": "Otantik Liderlik (Avolio & Gardner, 2005) + Ahlaki Muhakeme (Kohlberg, 1969)",
         "weight": 0.20,
         "maxScore": 100,
         "scoringCriteria": {
-          "90-100": "Etik ilkeleri her koşulda uygular, şeffaf raporlar, kurumsal değerleri içselleştirmiştir",
+          "90-100": "Etik ilkeleri her koşulda uygular, şeffaf raporlar, kurumsal değerleri içselleştirmiştir, baskı altında dahi taviz vermez",
           "70-89": "Genel olarak etik davranır, prosedürlere uyar ancak baskı altında sınır zorlar",
           "50-69": "Etik farkındalık var ancak pratik uygulamada tutarsız",
           "0-49": "Etik ihlaller görmezden gelir, prosedürü atlar, şeffaf değil"
         },
-        "keywords": ["etik ilkeler", "şeffaflık", "güvenlik protokolü", "dürüst raporlama", "kurumsal disiplin", "liyakat", "adalet", "tutarlılık", "dürüstlük", "hesap verebilirlik", "milli çıkar", "güvenilirlik", "uyumluluk"],
-        "negativeKeywords": ["hatayı gizleme", "prosedür ihlali", "bilgi sızdırma", "adaletsiz", "kayırmacılık", "sadakatsizlik", "tutarsız", "çıkar çatışması", "suistimal", "güvenlik zafiyeti"]
+        "keywords": [
+          "etik", "etik ilkeler", "etik değerler", "etik davranış", "etik karar",
+          "şeffaf", "şeffaflık", "şeffaf raporlama", "şeffaf davrandım",
+          "dürüst", "dürüstlük", "dürüst raporladım", "dürüstçe",
+          "hesap verebilir", "hesap verebilirlik", "hesabını verdim",
+          "sorumluluk", "sorumluluğumu yerine getirdim",
+          "prosedür", "prosedüre uydum", "prosedürleri takip ettim",
+          "protokol", "güvenlik protokolü", "protokole uygun",
+          "kural", "kurallara uyduk", "kural çerçevesinde",
+          "liyakat", "liyakate göre", "liyakat ilkesi",
+          "adalet", "adil", "adil davrandım", "eşit muamele",
+          "tutarlı", "tutarlılık", "tutarlı davrandım",
+          "güvenilir", "güvenilirlik", "güvenilir bir liderim",
+          "milli çıkar", "ülke çıkarı", "kurumsal çıkar",
+          "gizlilik", "gizli tutuyorum", "veri güvenliği",
+          "uyumluluk", "mevzuata uygun", "yasal çerçeve",
+          "belgeleme", "belgelerim", "kayıt altına aldım",
+          "raporladım", "raporlama yaptım", "üst yönetime bildirdim",
+          "hata kabul", "hatayı kabul ediyorum", "sorumluluğu üstlendim",
+          "düzeltici", "düzeltici eylem aldım",
+          "tarafsız", "tarafsız değerlendirdim", "objektif",
+          "ilke", "ilkelerim", "ilkeli davrandım",
+          "bütünlük", "değer bütünlüğü",
+          "kurumsal kimlik", "kurumsal değerler", "kuruma bağlılık",
+          "kalite", "kalite taahhüdü", "kalite standartları",
+          "sıfır hata", "sıfır tolerans"
+        ],
+        "negativeKeywords": [
+          "hatayı gizle", "gizledim", "kimse bilmez",
+          "prosedür ihlali", "prosedürü atladım", "kurala uymadım",
+          "bilgi sızdır", "sızdırdım",
+          "adaletsiz", "kayırdım", "torpil",
+          "kayırmacılık", "adam kayırma",
+          "sadakatsiz", "kuruma ihanet",
+          "tutarsız", "her seferinde farklı davrandım",
+          "çıkar çatışması", "kendi çıkarım için",
+          "suistimal", "yetkiyi kötüye kullandım",
+          "güvenlik açığı", "güvenliği ihmal ettim",
+          "rüşvet", "kural tanımama", "köşe dönme"
+        ],
+        "turkishRootForms": {
+          "roots": ["etik", "şeffaf", "dürüst", "hesap ver", "prosedür", "liyakat", "adalet", "tutarlı", "güvenilir", "milli", "uyumlul", "belge", "rapor", "tarafsız"]
+        }
       }
     ]
   },
@@ -251,13 +419,14 @@
     ]
   },
   "AcousticRubric": {
-    "description": "Roketsan Ses Analiz Rubriği",
+    "description": "Roketsan Ses ve Dil Analiz Rubriği — Türkçe NLP Tabanlı",
+    "scientificBasis": "Mehrabian (1967) İletişim Modeli, Pennebaker (2011) LIWC Dil Analizi, Türkçe Söylem Analizi",
     "parameters": [
       {
         "id": "SPEED",
         "name": "Konuşma Hızı",
-        "idealMin": 120,
-        "idealMax": 150,
+        "idealMin": 110,
+        "idealMax": 160,
         "unit": "kelime/dakika",
         "scoring": {
           "tooFast": { "threshold": 200, "score": -5, "note": "Anksiyete veya aşırı heyecan belirtisi." },
@@ -267,15 +436,148 @@
       },
       {
         "id": "SENTIMENT",
-        "name": "Duygu Tonu",
+        "name": "Duygu Tonu Analizi",
+        "scientificBasis": "Ekman (1992) Temel Duygular + Türkçe Duygu Sözlüğü (TS Corpus)",
         "tones": [
-          { "tone": "Empatik", "keywords": ["anlıyorum", "ekibim", "birlikte", "destek", "empati"], "score": 10 },
-          { "tone": "Kararlı", "keywords": ["kesinlikle", "derhal", "hemen", "kararlıyım", "aksiyon"], "score": 10 },
-          { "tone": "Savunmacı", "keywords": ["benim hatam değil", "ben değildim", "bana sormadılar"], "score": -10 }
+          {
+            "tone": "Empatik",
+            "keywords": [
+              "anlıyorum", "anlıyoruz", "anladım", "ekibim", "ekibimiz",
+              "birlikte", "destek", "destekliyorum", "empati", "empatik",
+              "hissediyorum", "yerinizde olsam", "durumunuzu anlıyorum",
+              "endişenizi paylaşıyorum", "sizin için", "ekibimin ihtiyacı",
+              "birlikte çözeriz", "yanınızdayım", "yalnız değilsiniz",
+              "ne hissettiklerini anlıyorum", "zor olduğunu biliyorum"
+            ],
+            "score": 12
+          },
+          {
+            "tone": "Kararlı",
+            "keywords": [
+              "kesinlikle", "derhal", "hemen", "kararlıyım", "aksiyon",
+              "tereddütsüz", "net kararım", "şüphe yok", "adım atacağım",
+              "çözüme odaklandım", "gecikmeden", "vakit kaybetmeden",
+              "kararlı bir şekilde", "net olarak", "doğrudan", "açıkça",
+              "kesin olarak", "tartışmasız", "hiç durmadan", "anında"
+            ],
+            "score": 12
+          },
+          {
+            "tone": "Analitik",
+            "keywords": [
+              "analiz ettim", "verilere göre", "değerlendirdim", "inceledim",
+              "sonuçlara bakarsak", "ölçüm", "karşılaştırma", "sistematik",
+              "kanıt", "bulgular", "istatistik", "rakamlar gösteriyor",
+              "kök neden", "nedenleri tespit ettim", "etkilerini ölçtüm",
+              "değişkenleri belirledim", "metodoloji", "çerçeve"
+            ],
+            "score": 10
+          },
+          {
+            "tone": "Vizyoner",
+            "keywords": [
+              "gelecekte", "uzun vadede", "hedefimiz", "stratejimiz",
+              "büyük resme bakarsak", "dönüşüm", "değişim yaratmak",
+              "öncü olmak", "fark yaratmak", "sürdürülebilir",
+              "ileri görüşlü", "proaktif düşünce", "geleceği şekillendir",
+              "kalıcı çözüm", "köklü değişim", "paradigma değişimi"
+            ],
+            "score": 10
+          },
+          {
+            "tone": "Savunmacı",
+            "keywords": [
+              "benim hatam değil", "ben değildim", "bana sormadılar",
+              "kimse söylemedi", "haberim yoktu", "ben yapmadım",
+              "başkası karar verdi", "benim kontrolümde değildi",
+              "beni suçluyorsunuz", "haksızlık bu", "ben ne yapabilirim"
+            ],
+            "score": -12
+          },
+          {
+            "tone": "Pasif",
+            "keywords": [
+              "ne yapabilirim ki", "elimden gelen", "belki", "sanırım",
+              "bilmiyorum", "zor", "imkansız", "yapamam", "başaramam",
+              "çok zor", "olmaz ki", "nasıl yapacağım bilmiyorum",
+              "kapasitem yetmez", "üstesinden gelemem"
+            ],
+            "score": -10
+          }
         ]
+      },
+      {
+        "id": "LINGUISTIC_MARKERS",
+        "name": "Türkçe Liderlik Dili Göstergeleri",
+        "description": "Pennebaker LIWC modelinin Türkçe uyarlaması",
+        "markers": {
+          "collectiveLanguage": {
+            "keywords": ["biz", "bizim", "bizde", "bize", "bizimle", "ekibimiz", "takımımız", "birlikte", "hep beraber", "ortak"],
+            "score": 8,
+            "note": "Kolektif dil — ekip odaklı liderlik göstergesi"
+          },
+          "actionVerbs": {
+            "keywords": [
+              "yapacağım", "alacağım", "başlatacağım", "çözeceğim", "yöneteceğim",
+              "koordine edeceğim", "takip edeceğim", "raporlayacağım", "analiz edeceğim",
+              "uygulayacağım", "geliştireceğim", "sağlayacağım", "tamamlayacağım",
+              "hallederim", "çözüyorum", "başlatıyorum", "yönetiyorum",
+              "harekete geçiyorum", "adım atıyorum", "aksiyona geçiyorum"
+            ],
+            "score": 10,
+            "note": "Eylem fiilleri — proaktif liderlik göstergesi"
+          },
+          "solutionFocused": {
+            "keywords": [
+              "çözüm", "öneri", "alternatif", "seçenek", "plan", "yol",
+              "yaklaşım", "strateji", "yöntem", "teknik", "araç",
+              "çıkış yolu", "nasıl çözeriz", "çözüm önerim", "planım şu"
+            ],
+            "score": 10,
+            "note": "Çözüm odaklı dil — problem çözme yetkinliği"
+          },
+          "structureWords": {
+            "keywords": [
+              "öncelikle", "ilk olarak", "birinci", "ikinci", "üçüncü",
+              "ardından", "sonrasında", "son olarak", "özetle", "sonuç olarak",
+              "bir yandan", "öte yandan", "aynı zamanda", "bunun yanı sıra",
+              "çünkü", "bu nedenle", "dolayısıyla", "bunun sonucunda",
+              "örneğin", "özellikle", "somutlaştırmak gerekirse"
+            ],
+            "score": 8,
+            "note": "Yapısal bağlaçlar — organize düşünce göstergesi"
+          },
+          "hedgingLanguage": {
+            "keywords": [
+              "belki", "sanırım", "galiba", "herhalde", "olabilir",
+              "mümkün olabilir", "düşünüyorum ama", "emin değilim",
+              "bilemiyorum", "zor söylemek", "nasıl desem"
+            ],
+            "score": -8,
+            "note": "Belirsizlik dili — özgüven eksikliği göstergesi"
+          }
+        }
+      },
+      {
+        "id": "STRUCTURE",
+        "name": "Yapısal Tutarlılık",
+        "scoring": {
+          "high": { "minMarkers": 4, "score": 20, "note": "İyi yapılandırılmış, mantıksal anlatım" },
+          "medium": { "minMarkers": 2, "score": 12, "note": "Genel yapı mevcut" },
+          "low": { "minMarkers": 0, "score": 5, "note": "Yapısız, dağınık anlatım" }
+        }
       }
     ],
-    "fillerWords": ["yani", "şey", "eee", "mmm", "uh", "um", "hani", "işte", "falan"]
+    "fillerWords": [
+      "yani", "şey", "eee", "mmm", "uh", "um", "hani", "işte", "falan",
+      "filan", "vesaire", "nasıl desem", "ne diyim", "nasıl anlatayım",
+      "şöyle diyeyim", "şöyle bir", "bir nevi", "bir çeşit"
+    ],
+    "scoringWeights": {
+      "content": 0.50,
+      "delivery": 0.30,
+      "structure": 0.20
+    }
   },
   "DepartmentThemes": {
     "description": "Departman temaları ve bağlamsal çapalar",
