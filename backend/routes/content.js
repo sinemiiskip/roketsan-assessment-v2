@@ -88,7 +88,6 @@ function buildDepartmentContext(session) {
     }
   }
 
-  // Varsayılan bağlam
   const defaultContext = {
     realProjects: 'Roketsan stratejik savunma sistemleri projeleri',
     challenges: 'teknik ve operasyonel kriz yönetimi',
@@ -332,6 +331,124 @@ FORMAT:
     console.error('[generate-intray]', err.message);
     res.json({ success: true, emails: getFallbackEmails(session, deptContext), demo: true });
   }
+});
+
+// ── Submit IceBreaker Answers ──────────────────────────────────────
+router.post('/submit-icebreaker', async (req, res) => {
+  const { session_id, answers } = req.body;
+  if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
+  if (!answers || !Array.isArray(answers)) return res.status(400).json({ error: 'answers dizisi gerekli' });
+
+  const session = await getSessionWithFallback(session_id);
+  if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
+
+  const questions = session.iceBreakerQuestions || getFallbackQuestions(session);
+
+  let totalScore = 0;
+  const maxScore = questions.length * 3;
+  const details = [];
+
+  for (const answer of answers) {
+    const question = questions.find(q => q.id === answer.questionId);
+    if (!question) continue;
+    const option = question.options.find(o => o.id === answer.selectedOptionId);
+    if (!option) continue;
+    totalScore += option.score;
+    details.push({
+      questionId: answer.questionId,
+      selectedOption: answer.selectedOptionId,
+      score: option.score,
+      competency: option.competency
+    });
+  }
+
+  const percentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
+
+  const result = {
+    totalScore,
+    maxScore,
+    score: percentage,
+    details,
+    timestamp: new Date().toISOString()
+  };
+
+  updateSession(session_id, { iceBreakerResult: result });
+  res.json({ success: true, result });
+});
+
+// ── Submit Scenario Response ───────────────────────────────────────
+router.post('/submit-scenario', async (req, res) => {
+  const { session_id, response } = req.body;
+  if (!session_id) return res.status(400).json({ error: 'session_id gerekli' });
+  if (!response) return res.status(400).json({ error: 'response gerekli' });
+
+  const session = await getSessionWithFallback(session_id);
+  if (!session) return res.status(404).json({ error: 'Oturum bulunamadı' });
+
+  const wordCount = response.trim().split(/\s+/).length;
+  const minWords = session.scenario?.minWords || 150;
+
+  let baseScore = Math.min(100, Math.round((wordCount / minWords) * 70));
+  if (wordCount >= minWords) baseScore = Math.max(baseScore, 65);
+
+  let aiScore = null;
+  let aiAnalysis = null;
+
+  try {
+    const rules = loadRules();
+    const competencyNames = rules.CompetencyMap.competencies
+      .map(c => `${c.id}: ${c.name}`).join('\n');
+
+    const prompt = `Sen Roketsan A.Ş. için kıdemli bir liderlik değerlendirme uzmanısın.
+
+ADAY BİLGİLERİ:
+- Ad: ${session.name}
+- Departman: ${session.department}
+- Pozisyon: ${session.position}
+
+SENARYO:
+${JSON.stringify(session.scenario?.crisis || 'Genel liderlik senaryosu')}
+
+ADAY YANITI:
+"${response}"
+
+YETKİNLİKLER:
+${competencyNames}
+
+Aşağıdaki JSON formatında değerlendir:
+{
+  "overallScore": 0-100,
+  "competencyScores": {
+    "LDR_01": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_02": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_03": { "score": 0-100, "evidence": "yanıttan kanıt" },
+    "LDR_04": { "score": 0-100, "evidence": "yanıttan kanıt" }
+  },
+  "strengths": ["güçlü yön 1", "güçlü yön 2"],
+  "improvements": ["gelişim alanı 1"],
+  "summary": "2-3 cümle değerlendirme"
+}`;
+
+    aiAnalysis = await callGemini(prompt);
+    aiScore = aiAnalysis.overallScore;
+  } catch (err) {
+    console.error('[submit-scenario AI]', err.message);
+  }
+
+  const finalScore = aiScore ?? baseScore;
+
+  const result = {
+    score: finalScore,
+    overallScore: finalScore,
+    wordCount,
+    response,
+    scenario: session.scenario?.title || 'Senaryo',
+    aiAnalysis: aiAnalysis || null,
+    timestamp: new Date().toISOString()
+  };
+
+  updateSession(session_id, { scenarioResult: result });
+  res.json({ success: true, result });
 });
 
 // ── Fallback functions ─────────────────────────────────────────────

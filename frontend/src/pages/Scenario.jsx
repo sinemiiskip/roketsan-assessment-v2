@@ -55,12 +55,24 @@ export default function Scenario() {
   }
 
   async function handleSubmit() {
-  if (wordCount < MIN_WORDS) return
-  setSubmitting(true)
-  setScenarioResult({ report, wordCount, submittedAt: new Date().toISOString() })
-  await new Promise(resolve => setTimeout(resolve, 500))
-  navigate('/audio')
-}
+    if (wordCount < MIN_WORDS) return
+    setSubmitting(true)
+    try {
+      // Submit to backend for scoring
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/submit-scenario`, {
+        session_id: session?.session_id,
+        response: report
+      })
+      setScenarioResult(res.data.result)
+    } catch (err) {
+      console.error('Scenario submit failed:', err)
+      // Fallback: save locally
+      setScenarioResult({ report, wordCount, submittedAt: new Date().toISOString() })
+    } finally {
+      setSubmitting(false)
+      navigate('/audio')
+    }
+  }
 
   const urgency = URGENCY_COLORS[scenario?.urgency] || URGENCY_COLORS.medium
 

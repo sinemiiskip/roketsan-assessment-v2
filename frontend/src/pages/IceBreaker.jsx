@@ -16,6 +16,7 @@ export default function IceBreaker() {
   const [answers, setAnswers] = useState({})
   const [selected, setSelected] = useState(null)
   const [animating, setAnimating] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => { generateQuestions() }, [])
 
@@ -38,7 +39,7 @@ export default function IceBreaker() {
 
   function handleSelect(option) { setSelected(option.id) }
 
-  function handleNext() {
+  async function handleNext() {
     if (!selected || !q) return
     const selectedOption = q.options.find(o => o.id === selected)
     const newAnswers = { ...answers, [q.id]: selectedOption }
@@ -52,13 +53,34 @@ export default function IceBreaker() {
         setAnimating(false)
       }, 300)
     } else {
-      const scores = {}
-      Object.values(newAnswers).forEach(ans => {
-        if (!scores[ans.competency]) scores[ans.competency] = 0
-        scores[ans.competency] += ans.score
-      })
-      setIceBreakerResult({ answers: newAnswers, scores, totalAnswers: Object.keys(newAnswers).length })
-      navigate('/scenario')
+      // Last question — submit to backend
+      setSubmitting(true)
+      try {
+        const answersArray = Object.entries(newAnswers).map(([questionId, option]) => ({
+          questionId: parseInt(questionId),
+          selectedOptionId: option.id
+        }))
+
+        const res = await axios.post(`${API}/api/submit-icebreaker`, {
+          session_id: session?.session_id,
+          answers: answersArray
+        })
+
+        const result = res.data.result
+        setIceBreakerResult(result)
+      } catch (err) {
+        console.error('IceBreaker submit failed:', err)
+        // Fallback: calculate locally
+        const scores = {}
+        Object.values(newAnswers).forEach(ans => {
+          if (!scores[ans.competency]) scores[ans.competency] = 0
+          scores[ans.competency] += ans.score
+        })
+        setIceBreakerResult({ answers: newAnswers, scores, totalAnswers: Object.keys(newAnswers).length })
+      } finally {
+        setSubmitting(false)
+        navigate('/scenario')
+      }
     }
   }
 
@@ -157,8 +179,8 @@ export default function IceBreaker() {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 32 }}>
-            <button className="btn-primary" onClick={handleNext} disabled={!selected}>
-              {current < questions.length - 1 ? 'Sonraki →' : 'Senaryoya Geç →'}
+            <button className="btn-primary" onClick={handleNext} disabled={!selected || submitting}>
+              {submitting ? 'Kaydediliyor...' : current < questions.length - 1 ? 'Sonraki →' : 'Senaryoya Geç →'}
             </button>
           </div>
         </div>
