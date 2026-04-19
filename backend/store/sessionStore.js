@@ -20,7 +20,7 @@ function setSession(id, data) {
     position: data.position,
     hierarchy_level: data.hierarchyLevel,
     session_data: data
-  }).then(({ error }) => {
+  }, { onConflict: 'session_id' }).then(({ error }) => {
     if (error) console.error('[Supabase] setSession error:', error.message);
   });
 }
@@ -38,7 +38,7 @@ function updateSession(id, updates) {
     position: updated.position,
     hierarchy_level: updated.hierarchyLevel,
     session_data: updated
-  }).then(({ error }) => {
+  }, { onConflict: 'session_id' }).then(({ error }) => {
     if (error) console.error('[Supabase] updateSession error:', error.message);
   });
   return true;
@@ -79,7 +79,7 @@ async function saveCandidate(sessionData) {
       position: sessionData.position,
       hierarchy_level: sessionData.hierarchyLevel,
       session_data: sessionData
-    });
+    }, { onConflict: 'session_id' });
     if (error) console.error('[Supabase] saveCandidate error:', error.message);
   } catch (err) {
     console.error('[Supabase] saveCandidate exception:', err.message);
@@ -125,7 +125,7 @@ async function saveResults(session_id, results) {
       ai_summary: aiSummary,
       leadership_profile: leadershipProfile,
       completed_at: new Date().toISOString()
-    });
+    }, { onConflict: 'session_id' });
 
     if (error) console.error('[Supabase] saveResults error:', error.message);
     return { overallScore, grade };
