@@ -88,19 +88,23 @@ async function saveCandidate(sessionData) {
 
 async function saveResults(session_id, results) {
   try {
-    const icebreakerScore = results.iceBreakerResult?.totalScore || 
+    const icebreakerScore = results.iceBreakerResult?.totalScore ||
                             results.iceBreakerResult?.score || 0;
-    const scenarioScore = results.scenarioResult?.score || 
+    const scenarioScore = results.scenarioResult?.score ||
                           results.scenarioResult?.overallScore || 0;
-    const audioScore = results.audioResult?.overallScore || 
+    const audioScore = results.audioResult?.overallScore ||
                        results.audioResult?.evaluation?.overallScore || 0;
-    const intrayScore = results.intrayResult?.percentage || 
+    const intrayScore = results.intrayResult?.percentage ||
                         results.intrayResult?.totalScore || 0;
 
-    const scores = [icebreakerScore, scenarioScore, audioScore, intrayScore].filter(s => s > 0);
-    const overallScore = scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      : 0;
+    // ✅ FIXED: Weighted average matching the UI weights
+    // Isınma 15% + Senaryo 35% + Sesli Yanıt 30% + In-Tray 20%
+    const overallScore = Math.round(
+      icebreakerScore * 0.15 +
+      scenarioScore   * 0.35 +
+      audioScore      * 0.30 +
+      intrayScore     * 0.20
+    );
 
     const grade = overallScore >= 90 ? 'A+' : overallScore >= 80 ? 'A' :
       overallScore >= 70 ? 'B+' : overallScore >= 60 ? 'B' :
@@ -135,14 +139,37 @@ async function saveResults(session_id, results) {
   }
 }
 
+// ✅ FIXED: Manual two-query join instead of relying on implicit Supabase FK relationship
+// The old assessment_results(*) join silently returns [] if no FK constraint is declared
+// in the Supabase dashboard, causing all scores to appear blank in the HR panel.
 async function getAllCandidates() {
   try {
-    const { data, error } = await supabase
+    const { data: candidates, error: cErr } = await supabase
       .from('candidates')
-      .select(`*, assessment_results(*)`)
+      .select('*')
       .order('created_at', { ascending: false });
-    if (error) throw error;
-    return data || [];
+
+    if (cErr) throw cErr;
+    if (!candidates?.length) return [];
+
+    const sessionIds = candidates.map(c => c.session_id);
+
+    const { data: results, error: rErr } = await supabase
+      .from('assessment_results')
+      .select('*')
+      .in('session_id', sessionIds);
+
+    if (rErr) console.error('[Supabase] results fetch error:', rErr.message);
+
+    // Manually attach results to each candidate (frontend expects assessment_results[0])
+    const resultsMap = {};
+    (results || []).forEach(r => { resultsMap[r.session_id] = r; });
+
+    return candidates.map(c => ({
+      ...c,
+      assessment_results: resultsMap[c.session_id] ? [resultsMap[c.session_id]] : []
+    }));
+
   } catch (err) {
     console.error('[Supabase] getAllCandidates error:', err.message);
     return [];
