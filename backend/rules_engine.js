@@ -49,12 +49,11 @@ function evaluateTranscript(transcript) {
   if (!rules) return { overallScore: 0 };
   const { CompetencyMap, AcousticRubric } = rules;
 
-  // Guard against missing scoringWeights
   const w = AcousticRubric?.scoringWeights || { content: 0.5, delivery: 0.3, structure: 0.2 };
 
   const words = transcript.trim().split(/\s+/);
   const wordCount = words.length;
-  const fillerCount = words.filter(w => AcousticRubric?.fillerWords?.includes(w.toLowerCase())).length;
+  const fillerCount = words.filter(word => AcousticRubric?.fillerWords?.includes(word.toLowerCase())).length;
   const fillerRatio = wordCount > 0 ? fillerCount / wordCount : 0;
 
   let contentScore = 0;
@@ -86,22 +85,37 @@ function evaluateTranscript(transcript) {
   return { competencyScores, contentScore: Math.round(contentScore), deliveryScore: Math.round(deliveryScore), structureScore: Math.round(structureScore), overallScore: Math.max(0, Math.min(100, overallScore)), wordCount, fillerWordCount: fillerCount, detectedTones, feedback };
 }
 
-function scoreInTray(userSelections) {
-  const rules = loadRules();
-  if (!rules) return { totalScore: 0, percentage: 0, results: [] };
-  const { InTrayMatrix } = rules;
+function scoreInTray(userSelections, emailsFromRequest) {
+  // emailsFromRequest: frontend'den gelen email listesi (rules.json'da artık InTrayMatrix yok)
+  const emails = emailsFromRequest || [];
+  if (!emails.length) return { totalScore: 0, maxScore: 0, percentage: 0, results: [], grade: 'C' };
+
+  const adjacentMap = { Q1: ['Q2'], Q2: ['Q1'], Q3: ['Q4'], Q4: ['Q3'] };
   let totalScore = 0;
+  const maxScore = emails.reduce((sum, e) => sum + (e.points || 20), 0);
   const results = [];
-  InTrayMatrix.emails.forEach(email => {
+
+  emails.forEach(email => {
     const userChoice = userSelections[email.id];
     if (!userChoice) return;
     const isCorrect = userChoice === email.correctQuadrant;
-    const earnedPoints = isCorrect ? email.points : Math.round(email.points * InTrayMatrix.scoring.adjacentQuadrantPenalty);
+    const isAdjacent = adjacentMap[email.correctQuadrant]?.includes(userChoice);
+    const earnedPoints = isCorrect ? email.points : isAdjacent ? Math.round(email.points * 0.5) : 0;
     totalScore += earnedPoints;
-    results.push({ emailId: email.id, subject: email.subject, from: email.from, userChoice, correctAnswer: email.correctQuadrant, isCorrect, earnedPoints, maxPoints: email.points, explanation: email.explanation });
+    results.push({
+      emailId: email.id, subject: email.subject, from: email.from,
+      userChoice, correctAnswer: email.correctQuadrant,
+      isCorrect, earnedPoints, maxPoints: email.points,
+      explanation: email.explanation
+    });
   });
-  const maxScore = InTrayMatrix.scoring.perfectScore;
-  return { totalScore, maxScore, percentage: Math.round((totalScore / maxScore) * 100), results, grade: getGrade(totalScore, maxScore) };
+
+  return {
+    totalScore, maxScore,
+    percentage: maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0,
+    results,
+    grade: getGrade(totalScore, maxScore)
+  };
 }
 
 function validateAuthorizedUser(username, password) {
@@ -112,8 +126,8 @@ function validateAuthorizedUser(username, password) {
 
 function getGrade(score, max) {
   const p = (score / max) * 100;
-  if (p >= 90) return 'A'; if (p >= 80) return 'B+'; if (p >= 70) return 'B';
-  if (p >= 60) return 'C+'; if (p >= 50) return 'C'; return 'D';
+  if (p >= 90) return 'A+'; if (p >= 85) return 'A'; if (p >= 75) return 'B+';
+  if (p >= 65) return 'B'; if (p >= 55) return 'C+'; if (p >= 50) return 'C'; return 'D';
 }
 
 module.exports = { loadRules, resolveHierarchyLevel, resolveDepartment, buildScenarioPrompt, evaluateTranscript, scoreInTray, validateAuthorizedUser };
