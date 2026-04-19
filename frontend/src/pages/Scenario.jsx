@@ -55,11 +55,12 @@ export default function Scenario() {
   }
 
   async function handleSubmit() {
-    if (wordCount < MIN_WORDS) return
-    setSubmitting(true)
-    setScenarioResult({ report, wordCount, submittedAt: new Date().toISOString() })
-    setTimeout(() => navigate('/audio'), 500)
-  }
+  if (wordCount < MIN_WORDS) return
+  setSubmitting(true)
+  setScenarioResult({ report, wordCount, submittedAt: new Date().toISOString() })
+  await new Promise(resolve => setTimeout(resolve, 500))
+  navigate('/audio')
+}
 
   const urgency = URGENCY_COLORS[scenario?.urgency] || URGENCY_COLORS.medium
 

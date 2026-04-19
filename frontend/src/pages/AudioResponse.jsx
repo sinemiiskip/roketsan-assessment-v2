@@ -98,29 +98,31 @@ export default function AudioResponse() {
   }
 
   async function handleSubmit() {
-    if (!transcript.trim()) {
-      alert('Konuşma metni alınamadı. Lütfen tekrar deneyin.')
-      return
-    }
-    setSubmitting(true)
-    setState('transcribing')
-    try {
-      const res = await axios.post(`${API}/api/submit-audio`, {
-        session_id: session?.session_id,
-        transcript,
-        duration: seconds,
-        caseTitle: audioCase?.caseTitle
-      })
-      setAudioResult(res.data.evaluation)
-      setState('done')
-      setTimeout(() => navigate('/intray'), 1500)
-    } catch {
-      setAudioResult({ transcript, duration: seconds, overallScore: 0, aiAnalysis: null })
-      navigate('/intray')
-    } finally {
-      setSubmitting(false)
-    }
+  if (!transcript.trim()) {
+    alert('Konuşma metni alınamadı. Lütfen tekrar deneyin.')
+    return
   }
+  setSubmitting(true)
+  setState('transcribing')
+  try {
+    const res = await axios.post(`${API}/api/submit-audio`, {
+      session_id: session?.session_id,
+      transcript,
+      duration: seconds,
+      caseTitle: audioCase?.caseTitle
+    })
+    setAudioResult(res.data.evaluation)
+    setState('done')
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    navigate('/intray')
+  } catch {
+    setAudioResult({ transcript, duration: seconds, overallScore: 0, aiAnalysis: null })
+    await new Promise(resolve => setTimeout(resolve, 500))
+    navigate('/intray')
+  } finally {
+    setSubmitting(false)
+  }
+}
 
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
